@@ -1289,6 +1289,7 @@
                 <option value="60">60s</option>
                 <option value="90" selected>90s</option>
                 <option value="120">120s</option>
+                <option value="0">♾️ Unlimited</option>
               </select>
             </div>
             <div>
@@ -1299,6 +1300,7 @@
                 <option value="180" selected>180s</option>
                 <option value="240">240s</option>
                 <option value="300">300s</option>
+                <option value="0">♾️ Unlimited</option>
               </select>
             </div>
             <div>
@@ -1308,6 +1310,7 @@
                 <option value="60" selected>60s</option>
                 <option value="90">90s</option>
                 <option value="120">120s</option>
+                <option value="0">♾️ Unlimited</option>
               </select>
             </div>
           </div>
@@ -2414,9 +2417,10 @@ function hostStartGame() {
     p.totalScore = 0;
     p.deck = createDefaultDeck();
   });
+  const readTime = gameState.settings.readTime ?? 90;
   gameState.votes = {};
   gameState.phase = 'READING';
-  gameState.phaseEndTime = Date.now() + gameState.settings.readTime * 1000;
+  gameState.phaseEndTime = readTime > 0 ? Date.now() + readTime * 1000 : 0;
   broadcastState();
 }
 
@@ -2434,8 +2438,9 @@ function hostAdvancePhase() {
   if (!isHost) return;
   if (gameState.phase === 'READING') {
     Object.values(gameState.players).forEach(p => p.ready = false);
+    const buildTime = gameState.settings.buildTime ?? 180;
     gameState.phase = 'BUILDING';
-    gameState.phaseEndTime = Date.now() + gameState.settings.buildTime * 1000;
+    gameState.phaseEndTime = buildTime > 0 ? Date.now() + buildTime * 1000 : 0;
     broadcastState();
   } else if (gameState.phase === 'BUILDING') {
     const ids = Object.keys(gameState.players);
@@ -2443,11 +2448,12 @@ function hostAdvancePhase() {
       const j = Math.floor(Math.random() * (i + 1));
       [ids[i], ids[j]] = [ids[j], ids[i]];
     }
+    const pitchTime = gameState.settings.pitchTime ?? 60;
     gameState.presentOrder = ids;
     gameState.currentPresIdx = 0;
     gameState.currentSlideIdx = 0;
     gameState.phase = 'PRESENTING';
-    gameState.phaseEndTime = Date.now() + (gameState.settings.pitchTime || 60) * 1000;
+    gameState.phaseEndTime = pitchTime > 0 ? Date.now() + pitchTime * 1000 : 0;
     broadcastState();
   }
 }
@@ -2469,10 +2475,11 @@ function hostAdvanceAfterReveal() {
   if (!isHost) return;
   playSlideWhoosh();
   if (gameState.currentPresIdx + 1 < gameState.presentOrder.length) {
+    const pitchTime = gameState.settings.pitchTime ?? 60;
     gameState.currentPresIdx++;
     gameState.currentSlideIdx = 0;
     gameState.phase = 'PRESENTING';
-    gameState.phaseEndTime = Date.now() + (gameState.settings.pitchTime || 60) * 1000;
+    gameState.phaseEndTime = pitchTime > 0 ? Date.now() + pitchTime * 1000 : 0;
     broadcastState();
   } else {
     gameState.phase = 'PODIUM';
@@ -2518,9 +2525,9 @@ function applyGameState(state) {
   document.getElementById('mode-btn-choose').classList.toggle('active', state.settings.wikiMode === 'choose');
   if (!isHost) {
     document.getElementById('setting-lang').value = state.settings.lang;
-    document.getElementById('setting-read-time').value = state.settings.readTime;
-    document.getElementById('setting-build-time').value = state.settings.buildTime;
-    document.getElementById('setting-pitch-time').value = state.settings.pitchTime || 60;
+    document.getElementById('setting-read-time').value = state.settings.readTime ?? 90;
+    document.getElementById('setting-build-time').value = state.settings.buildTime ?? 180;
+    document.getElementById('setting-pitch-time').value = state.settings.pitchTime ?? 60;
   }
 
   const phaseNames = {
@@ -2535,7 +2542,7 @@ function applyGameState(state) {
   document.getElementById('hud-phase-label').textContent = phaseNames[state.phase] || state.phase;
 
   const timerBox = document.getElementById('hud-timer-box');
-  if (state.phase === 'READING' || state.phase === 'BUILDING' || (state.phase === 'PRESENTING' && state.phaseEndTime > 0)) {
+  if (state.phase === 'READING' || state.phase === 'BUILDING' || state.phase === 'PRESENTING') {
     timerBox.style.display = 'flex';
     document.getElementById('hud-host-skip').style.display = isHost ? 'inline-flex' : 'none';
     startLocalCountdown(state.phaseEndTime);
@@ -2558,12 +2565,16 @@ function applyGameState(state) {
   if (state.phase === 'READING') {
     stopYoutubeMusic();
     const isChooseMode = state.settings.wikiMode === 'choose';
+    const isUnlimitedRead = (state.settings.readTime ?? 90) === 0;
     document.getElementById('choose-wiki-panel').style.display = isChooseMode ? 'block' : 'none';
     document.getElementById('reroll-wiki-btn').style.display = isChooseMode ? 'none' : 'inline-flex';
     document.getElementById('read-phase-tag').textContent = isChooseMode ? 'PHASE 1: CHOOSE YOUR WIKI PAGE' : 'PHASE 1: RANDOM WIKI ROULETTE';
     document.getElementById('read-phase-heading').textContent = isChooseMode
       ? 'Search & pick any Wikipedia page to present!'
       : 'Study your secret Wikipedia article!';
+    document.getElementById('read-phase-sub').textContent = isUnlimitedRead
+      ? 'Unlimited time! Slide studio unlocks when everyone clicks "I\'m Ready!" or the Host clicks "Skip ⏭".'
+      : 'Slide studio unlocks when the timer finishes, everyone clicks "I\'m Ready!", or the Host clicks "Skip ⏭".';
 
     if (lastRenderedPhase !== 'READING') {
       document.getElementById('reroll-wiki-btn').disabled = false;
@@ -2648,6 +2659,11 @@ function applyGameState(state) {
 function startLocalCountdown(endTime) {
   if (localTimerInterval) clearInterval(localTimerInterval);
   const timerEl = document.getElementById('hud-timer');
+  if (!endTime || endTime <= 0) {
+    timerEl.classList.remove('urgent');
+    timerEl.textContent = '♾️ Unlimited';
+    return;
+  }
   function update() {
     const rem = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
     const mins = String(Math.floor(rem / 60)).padStart(2, '0');
