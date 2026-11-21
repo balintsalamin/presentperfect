@@ -3,78 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WikiPitch! — Wikipedia Party Presentation Game</title>
-  <!-- Google Fonts for UI & Slide Editor -->
+  <title>PresentPerfect — Wikipedia Party Presentation Game</title>
+
+  <!-- Google Fonts for Bump-Inspired UI & Slide Studio -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Caveat:wght@700&family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@600;800&family=Playfair+Display:ital,wght@0,700;1,700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,700;1,700&family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@600;800&family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
   <!-- PeerJS for Zero-Server P2P Multiplayer -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <!-- JSZip for Multi-PNG Slide Export -->
+  <!-- JSZip for Multi-Slide HD PNG Pack Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- Canvas Confetti for TV Reveal & Podium -->
+  <!-- Canvas Confetti for TV Reveal & Podium Celebrations -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
     :root {
-      --bg: #FFFDF7;
-      --ink: #141416;
-      --lime: #C6FF33;
-      --violet: #9D7BFF;
-      --coral: #FF5C5C;
-      --cyan: #4DEEEA;
+      --bg: #FAF7EE;
+      --ink: #18181B;
+      --lime: #C8FF2E;
+      --lime-hover: #B7F216;
+      --violet: #8F6BFF;
+      --coral: #FF5454;
+      --cyan: #3BE8E0;
       --yellow: #FFE600;
-      --pink: #FF85E4;
+      --pink: #FF7EE2;
       --surface: #FFFFFF;
-      --muted: #F1EFE7;
-      --border: 3px solid #141416;
-      --shadow: 4px 4px 0px #141416;
-      --shadow-lg: 7px 7px 0px #141416;
-      --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --muted: #EFECE2;
+      --border: 2.5px solid #18181B;
+      --border-thick: 3px solid #18181B;
+      --shadow-sm: 2.5px 2.5px 0px #18181B;
+      --shadow: 4px 4px 0px #18181B;
+      --shadow-lg: 7px 7px 0px #18181B;
+      --snap: cubic-bezier(0.2, 1.48, 0.35, 1);
+      --fast: 0.14s;
     }
 
     * {
       box-sizing: border-box;
-      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
       margin: 0;
       padding: 0;
       background-color: var(--bg);
-      background-image: radial-gradient(#d8d4c5 1.5px, transparent 1.5px);
-      background-size: 22px 22px;
+      /* Dual-dot tactile canvas grid background */
+      background-image:
+        radial-gradient(rgba(24, 24, 27, 0.16) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(143, 107, 255, 0.11) 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
       color: var(--ink);
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       overflow-x: hidden;
       min-height: 100vh;
     }
 
-    h1, h2, h3, .font-display {
+    h1, h2, h3, h4, .font-display {
       font-family: 'Fredoka', sans-serif;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.015em;
     }
 
-    /* Bump-style Tactile UI Components */
+    /* ==================== TACTILE BUMP UI COMPONENTS ==================== */
     .bump-card {
       background: var(--surface);
       border: var(--border);
       border-radius: 24px;
       box-shadow: var(--shadow);
       padding: 20px;
+      transition: transform var(--fast) var(--snap), box-shadow var(--fast) ease;
     }
 
     .bump-pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
+      gap: 7px;
+      padding: 6px 14px;
       border: var(--border);
       border-radius: 999px;
       background: var(--surface);
-      font-weight: 700;
-      font-size: 0.92rem;
-      box-shadow: 2px 2px 0 #141416;
+      font-weight: 800;
+      font-size: 0.86rem;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
     }
 
     .bump-btn {
@@ -82,187 +94,270 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 22px;
+      padding: 11px 20px;
       border: var(--border);
       border-radius: 999px;
       background: var(--lime);
       color: var(--ink);
       font-family: 'Fredoka', sans-serif;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       cursor: pointer;
       box-shadow: var(--shadow);
-      transition: transform 0.16s var(--bounce), box-shadow 0.16s ease, background-color 0.15s ease;
+      user-select: none;
+      transition: transform var(--fast) var(--snap), box-shadow 0.1s ease, background-color 0.12s ease;
     }
 
     .bump-btn:hover:not(:disabled) {
-      transform: translate(-2px, -2px) scale(1.02);
-      box-shadow: 6px 6px 0 #141416;
+      transform: translate(-2px, -2px) scale(1.03);
+      box-shadow: 6px 6px 0 var(--ink);
     }
 
     .bump-btn:active:not(:disabled) {
-      transform: translate(3px, 3px) scale(0.98);
-      box-shadow: 1px 1px 0 #141416;
+      transform: translate(3px, 3px) scale(0.95);
+      box-shadow: 1px 1px 0 var(--ink);
     }
 
     .bump-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
     .bump-btn.violet { background: var(--violet); color: #fff; }
     .bump-btn.coral { background: var(--coral); color: #fff; }
-    .bump-btn.cyan { background: var(--cyan); }
-    .bump-btn.yellow { background: var(--yellow); }
-    .bump-btn.white { background: #fff; }
-    .bump-btn.sm { padding: 7px 14px; font-size: 0.88rem; border-width: 2.5px; box-shadow: 2.5px 2.5px 0 #141416; }
+    .bump-btn.cyan { background: var(--cyan); color: var(--ink); }
+    .bump-btn.yellow { background: var(--yellow); color: var(--ink); }
+    .bump-btn.pink { background: var(--pink); color: var(--ink); }
+    .bump-btn.white { background: #fff; color: var(--ink); }
+    .bump-btn.sm { padding: 7px 13px; font-size: 0.86rem; box-shadow: var(--shadow-sm); }
 
     .bump-input, .bump-select {
       width: 100%;
-      padding: 12px 16px;
+      padding: 11px 15px;
       border: var(--border);
       border-radius: 16px;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.96rem;
       background: #fff;
       color: var(--ink);
-      box-shadow: inset 2px 2px 0 rgba(0,0,0,0.06);
+      box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.05);
       outline: none;
-      user-select: text;
+      transition: transform 0.12s var(--snap), box-shadow 0.12s ease;
     }
 
     .bump-input:focus, .bump-select:focus {
-      background: #fffef0;
-      box-shadow: 0 0 0 3px var(--violet);
+      background: #FFFDF2;
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 3px var(--violet), 3px 3px 0 var(--ink);
     }
 
-    /* Top HUD Bar */
+    .badge-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 2px solid var(--ink);
+      font-size: 0.74rem;
+      font-weight: 800;
+      background: #fff;
+      letter-spacing: 0.02em;
+    }
+
+    /* ==================== GLASSMORPHIC TOP FLOATING HUD ==================== */
     #top-hud {
       position: sticky;
-      top: 0;
-      z-index: 90;
+      top: 10px;
+      z-index: 100;
+      max-width: 1440px;
+      margin: 10px auto 0;
+      padding: 8px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 20px;
-      background: rgba(255, 253, 247, 0.92);
-      backdrop-filter: blur(8px);
-      border-bottom: var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 768px) {
+      #top-hud {
+        border-radius: 22px;
+        margin: 8px 10px 0;
+        padding: 10px 14px;
+      }
     }
 
     .logo-badge {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      background: var(--yellow);
+      gap: 8px;
+      background: linear-gradient(135deg, var(--yellow) 0%, #FFD000 100%);
       border: var(--border);
       border-radius: 999px;
-      padding: 6px 16px;
-      box-shadow: 3px 3px 0 #141416;
+      padding: 5px 15px;
+      box-shadow: var(--shadow-sm);
       font-family: 'Fredoka', sans-serif;
       font-weight: 700;
-      font-size: 1.25rem;
+      font-size: 1.18rem;
       transform: rotate(-1.5deg);
+      transition: transform var(--fast) var(--snap);
+      cursor: default;
     }
+    .logo-badge:hover { transform: rotate(1.5deg) scale(1.04); }
 
     .timer-pill {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 800;
       background: var(--ink);
       color: var(--lime);
-      padding: 8px 20px;
+      padding: 6px 18px;
       border-radius: 999px;
       border: var(--border);
       box-shadow: 3px 3px 0 var(--violet);
-      transition: transform 0.2s var(--bounce);
+      transition: transform var(--fast) var(--snap);
     }
 
     .timer-pill.urgent {
       background: var(--coral);
       color: #fff;
-      animation: pulseUrgent 0.6s infinite alternate;
+      box-shadow: 3px 3px 0 var(--ink);
+      animation: pulseUrgent 0.45s infinite alternate var(--snap);
     }
 
     @keyframes pulseUrgent {
-      from { transform: scale(1); }
-      to { transform: scale(1.08); }
+      from { transform: scale(1) rotate(-1deg); }
+      to { transform: scale(1.09) rotate(1deg); }
     }
 
-    /* Screens */
-    .screen {
-      display: none;
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .screen.active {
-      display: block;
-      animation: popIn 0.35s var(--bounce);
+    /* ==================== NON-BLOCKING TOAST NOTIFICATIONS ==================== */
+    #toast-stack {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
     }
 
-    @keyframes popIn {
-      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    .bump-toast {
+      background: var(--ink);
+      color: #fff;
+      border: var(--border);
+      border-radius: 18px;
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastPop 0.25s var(--snap);
+    }
+    .bump-toast.lime { background: var(--lime); color: var(--ink); }
+    .bump-toast.coral { background: var(--coral); color: #fff; }
+    .bump-toast.cyan { background: var(--cyan); color: var(--ink); }
+
+    @keyframes toastPop {
+      from { opacity: 0; transform: translateY(16px) scale(0.9); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Landing / Lobby */
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 24px;
-      max-width: 1050px;
-      margin: 24px auto;
+    /* ==================== SCREENS & TRANSITIONS ==================== */
+    .screen {
+      display: none;
+      max-width: 1460px;
+      margin: 0 auto;
+      padding: 18px 20px 36px;
+    }
+    .screen.active {
+      display: block;
+      animation: snapScreenIn 0.28s var(--snap);
     }
 
-    @media (max-width: 860px) {
+    @keyframes snapScreenIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.975); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes dropBounce {
+      0% { transform: scale(1.24) rotate(-4deg); }
+      55% { transform: scale(0.92) rotate(2deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .just-dropped {
+      animation: dropBounce 0.34s var(--snap);
+    }
+
+    /* ==================== LOBBY & SETUP ==================== */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 24px;
+      max-width: 1080px;
+      margin: 18px auto;
+    }
+
+    @media (max-width: 880px) {
       .hero-grid { grid-template-columns: 1fr; }
     }
 
     .avatar-picker {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
       gap: 8px;
       margin-top: 8px;
     }
 
+    @media (max-width: 480px) {
+      .avatar-picker { grid-template-columns: repeat(4, 1fr); }
+    }
+
     .avatar-opt {
-      width: 44px;
-      height: 44px;
+      aspect-ratio: 1;
       border-radius: 14px;
-      border: 2.5px solid var(--ink);
+      border: var(--border);
       background: #fff;
       font-size: 1.45rem;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.15s var(--bounce);
+      user-select: none;
+      transition: transform var(--fast) var(--snap), background-color 0.12s;
     }
+    .avatar-opt:hover { transform: translateY(-2px) scale(1.08); }
     .avatar-opt.selected {
       background: var(--lime);
-      transform: scale(1.14) rotate(-4deg);
-      box-shadow: 3px 3px 0 #141416;
+      transform: scale(1.14) rotate(-5deg);
+      box-shadow: var(--shadow-sm);
     }
 
     .player-bubble {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 16px;
+      padding: 11px 14px;
       border: var(--border);
       border-radius: 20px;
       background: #fff;
-      box-shadow: 3px 3px 0 #141416;
-      animation: popIn 0.3s var(--bounce);
+      box-shadow: var(--shadow-sm);
+      animation: snapScreenIn 0.25s var(--snap);
     }
 
     .player-avatar-circle {
       width: 46px;
       height: 46px;
       border-radius: 50%;
-      border: 2.5px solid #141416;
+      border: var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -270,11 +365,48 @@
       flex-shrink: 0;
     }
 
-    /* Wikipedia Reader Styling */
+    .mode-switch-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #fff;
+      padding: 5px;
+      border: var(--border);
+      border-radius: 18px;
+    }
+    .mode-switch-btn {
+      padding: 9px 10px;
+      border: 2px solid transparent;
+      border-radius: 13px;
+      background: transparent;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--fast) var(--snap);
+    }
+    .mode-switch-btn.active {
+      background: var(--lime);
+      border-color: var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+      transform: scale(1.02);
+    }
+
+    .settings-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 520px) {
+      .settings-row-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ==================== WIKIPEDIA READER & RUBBER-BAND PULL ==================== */
     .wiki-viewer {
       background: #fff;
       border: var(--border);
-      border-radius: 22px;
+      border-radius: 24px;
       box-shadow: var(--shadow);
       overflow: hidden;
       display: flex;
@@ -283,9 +415,9 @@
     }
 
     .wiki-header-bar {
-      background: var(--cyan);
+      background: linear-gradient(90deg, var(--cyan) 0%, #7BF2EC 100%);
       border-bottom: var(--border);
-      padding: 12px 16px;
+      padding: 11px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -296,18 +428,15 @@
       padding: 20px 24px;
       overflow-y: auto;
       flex: 1;
-      user-select: text !important;
+      user-select: text;
       line-height: 1.65;
-      font-size: 0.98rem;
-    }
-
-    .wiki-content-scroll * {
-      user-select: text !important;
+      font-size: 0.96rem;
+      position: relative;
     }
 
     .wiki-content-scroll h1 {
       font-family: 'Playfair Display', serif;
-      font-size: 2rem;
+      font-size: 1.95rem;
       margin: 0 0 12px 0;
       border-bottom: 2px solid #e5e5e5;
       padding-bottom: 8px;
@@ -323,25 +452,30 @@
     .wiki-content-scroll img {
       max-width: 100%;
       height: auto;
-      border-radius: 12px;
-      border: 2px solid #141416;
+      border-radius: 14px;
+      border: var(--border);
       cursor: grab;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.16s var(--snap), box-shadow 0.16s ease;
     }
 
     .wiki-content-scroll img:hover {
-      transform: scale(1.02);
-      box-shadow: 4px 4px 0 var(--lime);
+      transform: scale(1.03) rotate(-1deg);
+      box-shadow: 5px 5px 0 var(--lime);
+    }
+
+    .wiki-content-scroll img.being-pulled {
+      opacity: 0.42;
+      transform: scale(0.94);
     }
 
     .wiki-content-scroll table.infobox {
       float: right;
       margin: 0 0 16px 16px;
-      max-width: 270px;
-      border: 2px solid #141416;
-      border-radius: 12px;
-      background: #faf9f5;
-      font-size: 0.85rem;
+      max-width: 265px;
+      border: var(--border);
+      border-radius: 14px;
+      background: #FAF8F2;
+      font-size: 0.84rem;
       padding: 8px;
     }
 
@@ -352,33 +486,97 @@
       display: none !important;
     }
 
-    /* Floating Selection Helper */
+    .wiki-search-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .wiki-search-card {
+      background: #fff;
+      border: var(--border);
+      border-radius: 16px;
+      padding: 11px 14px;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--fast) var(--snap), background 0.12s;
+    }
+    .wiki-search-card:hover {
+      transform: translateY(-2px) scale(1.02);
+      background: var(--lime);
+    }
+
+    /* Floating Selection Helper & Tactile Rubber-Band Tether */
     #wiki-selection-pop {
       position: fixed;
       z-index: 999;
       display: none;
+      align-items: center;
+      gap: 6px;
       background: var(--ink);
       color: var(--lime);
       border: 2.5px solid #fff;
       border-radius: 999px;
-      padding: 7px 14px;
+      padding: 8px 15px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      cursor: grab;
+      user-select: none;
+      animation: snapScreenIn 0.16s var(--snap);
+    }
+    #wiki-selection-pop:hover {
+      transform: scale(1.06);
+      background: var(--violet);
+      color: #fff;
+    }
+
+    #tactile-tether-svg {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1200;
+      display: none;
+    }
+
+    #tactile-drag-ghost {
+      position: fixed;
+      z-index: 1205;
+      pointer-events: none;
+      display: none;
+      max-width: 245px;
+      background: #fff;
+      border: var(--border-thick);
+      border-radius: 18px;
+      padding: 10px 14px;
+      box-shadow: 6px 6px 0 var(--ink);
       font-family: 'Fredoka', sans-serif;
       font-weight: 700;
       font-size: 0.88rem;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.28);
-      cursor: pointer;
+      transform-origin: center center;
+      transition: background-color 0.12s ease;
     }
 
-    /* Builder Split Workspace */
+    #tactile-drag-ghost.snapped {
+      background: var(--lime);
+      box-shadow: 8px 8px 0 var(--ink);
+    }
+
+    /* ==================== SLIDE BUILDER WORKSPACE ==================== */
     .builder-layout {
       display: grid;
-      grid-template-columns: 40% 60%;
+      grid-template-columns: 38% 62%;
       gap: 16px;
-      height: calc(100vh - 96px);
+      height: calc(100vh - 102px);
       min-height: 620px;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1040px) {
       .builder-layout {
         grid-template-columns: 1fr;
         height: auto;
@@ -389,7 +587,7 @@
     .ppt-studio {
       background: var(--surface);
       border: var(--border);
-      border-radius: 22px;
+      border-radius: 24px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
@@ -408,32 +606,35 @@
 
     .tool-btn {
       padding: 7px 11px;
-      border: 2px solid var(--ink);
+      border: var(--border);
       border-radius: 12px;
       background: #fff;
       font-family: 'Fredoka', sans-serif;
-      font-weight: 600;
-      font-size: 0.85rem;
+      font-weight: 700;
+      font-size: 0.84rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      box-shadow: 2px 2px 0 #141416;
-      transition: transform 0.12s var(--bounce);
+      box-shadow: 2px 2px 0 var(--ink);
+      user-select: none;
+      transition: transform var(--fast) var(--snap), background 0.1s;
     }
 
-    .tool-btn:hover { transform: translateY(-1px); background: #fffbe0; }
-    .tool-btn.active { background: var(--lime); box-shadow: inset 2px 2px 0 rgba(0,0,0,0.15); }
+    .tool-btn:hover { transform: translateY(-2px) scale(1.03); background: #FFFBE0; }
+    .tool-btn:active { transform: translate(1px, 1px) scale(0.95); box-shadow: 0 0 0 var(--ink); }
+    .tool-btn.active { background: var(--lime); box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.16); }
 
     .ppt-subbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       padding: 7px 12px;
       background: #fff;
-      border-bottom: 2px solid #e6e3d8;
-      font-size: 0.84rem;
+      border-bottom: 2px solid #E6E2D6;
+      font-size: 0.82rem;
+      min-height: 46px;
     }
 
     /* 16:9 Slide Stage Container */
@@ -442,8 +643,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
-      background: #e9e6dc;
+      padding: 14px;
+      background: #E6E2D6;
+      background-image: radial-gradient(rgba(24, 24, 27, 0.11) 1px, transparent 1px);
+      background-size: 16px 16px;
       position: relative;
       overflow: hidden;
     }
@@ -451,77 +654,101 @@
     .slide-canvas-box {
       position: relative;
       width: 100%;
-      max-width: 780px;
+      max-width: 820px;
       aspect-ratio: 16 / 9;
       background: #ffffff;
-      border: 3px solid #141416;
-      border-radius: 16px;
-      box-shadow: 6px 6px 0 #141416;
+      border: var(--border-thick);
+      border-radius: 18px;
+      box-shadow: var(--shadow-lg);
       overflow: hidden;
+      transition: outline 0.12s ease, transform 0.15s var(--snap);
     }
 
     .slide-canvas-box.drag-over {
-      outline: 4px dashed var(--violet);
+      outline: 5px dashed var(--violet);
       outline-offset: -8px;
-      background-color: #f6f2ff !important;
+      transform: scale(1.012);
     }
 
     /* Slide Background Patterns */
     .bg-dots {
-      background-image: radial-gradient(rgba(20,20,22,0.18) 2px, transparent 2px);
+      background-image: radial-gradient(rgba(24, 24, 27, 0.2) 2px, transparent 2px);
       background-size: 20px 20px;
     }
     .bg-grid {
-      background-image: linear-gradient(to right, rgba(20,20,22,0.1) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(20,20,22,0.1) 1px, transparent 1px);
+      background-image:
+        linear-gradient(to right, rgba(24, 24, 27, 0.11) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(24, 24, 27, 0.11) 1px, transparent 1px);
       background-size: 24px 24px;
+    }
+    .bg-stripes {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(24, 24, 27, 0.06),
+        rgba(24, 24, 27, 0.06) 12px,
+        transparent 12px,
+        transparent 24px
+      );
+    }
+    .bg-confetti {
+      background-image:
+        radial-gradient(#FF5454 2.5px, transparent 2.5px),
+        radial-gradient(#8F6BFF 2.5px, transparent 2.5px),
+        radial-gradient(#3BE8E0 2.5px, transparent 2.5px);
+      background-size: 48px 48px;
+      background-position: 0 0, 16px 24px, 32px 10px;
     }
     .bg-sunset {
       background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 50%, #F6D365 100%) !important;
     }
     .bg-cyber {
-      background: linear-gradient(135deg, #141416 0%, #2d1b69 100%) !important;
+      background: linear-gradient(135deg, #18181B 0%, #2E1A72 100%) !important;
     }
 
-    /* Slide Elements */
+    /* Slide Elements & Handles */
     .slide-el {
       position: absolute;
       cursor: move;
       touch-action: none;
+      user-select: none;
     }
 
     .slide-el.selected {
       outline: 2.5px dashed var(--violet);
-      outline-offset: 3px;
+      outline-offset: 4px;
     }
 
     .el-handle-resize {
       position: absolute;
-      right: -8px;
-      bottom: -8px;
-      width: 16px;
-      height: 16px;
+      right: -9px;
+      bottom: -9px;
+      width: 18px;
+      height: 18px;
       background: var(--lime);
-      border: 2.5px solid #141416;
+      border: var(--border);
       border-radius: 50%;
       cursor: nwse-resize;
       display: none;
-      z-index: 20;
+      z-index: 25;
+      box-shadow: 1.5px 1.5px 0 var(--ink);
+      transition: transform 0.12s var(--snap);
     }
+    .el-handle-resize:hover { transform: scale(1.28); }
 
     .el-handle-rotate {
       position: absolute;
-      top: -24px;
+      top: -26px;
       left: 50%;
       transform: translateX(-50%);
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       background: var(--cyan);
-      border: 2.5px solid #141416;
+      border: var(--border);
       border-radius: 50%;
       cursor: grab;
       display: none;
-      z-index: 20;
+      z-index: 25;
+      box-shadow: 1.5px 1.5px 0 var(--ink);
     }
 
     .slide-el.selected .el-handle-resize,
@@ -529,24 +756,92 @@
       display: block;
     }
 
+    /* 7 Configurable Text Box Styles */
     .el-text-content {
       width: 100%;
       height: 100%;
-      padding: 8px 12px;
+      padding: 8px 14px;
       word-break: break-word;
       overflow: hidden;
       outline: none;
-      line-height: 1.25;
+      line-height: 1.22;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
     .el-text-content[contenteditable="true"] {
       cursor: text;
-      user-select: text !important;
-      background: rgba(255,255,255,0.85);
+      user-select: text;
+    }
+
+    /* 1. Bump Card */
+    .tbox-bump {
+      border: var(--border-thick) solid var(--box-border, #18181B);
+      border-radius: 16px;
+      box-shadow: 4px 4px 0 var(--box-border, #18181B);
+    }
+
+    /* 2. Capsule Pill */
+    .tbox-pill {
+      border: var(--border-thick) solid var(--box-border, #18181B);
+      border-radius: 999px;
+      box-shadow: 3px 3px 0 var(--box-border, #18181B);
+      padding: 8px 22px;
+    }
+
+    /* 3. Speech Bubble */
+    .tbox-speech {
+      border: var(--border-thick) solid var(--box-border, #18181B);
+      border-radius: 22px;
+      box-shadow: 3px 3px 0 var(--box-border, #18181B);
+      position: relative;
+    }
+    .tbox-speech::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 22px;
+      width: 16px;
+      height: 16px;
+      background: inherit;
+      border-right: 3px solid var(--box-border, #18181B);
+      border-bottom: 3px solid var(--box-border, #18181B);
+      transform: rotate(45deg);
+    }
+
+    /* 4. Sticky Note */
+    .tbox-sticky {
+      border: 2px solid rgba(24, 24, 27, 0.35);
+      border-radius: 3px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+    }
+
+    /* 5. Neon Glow */
+    .tbox-neon {
+      background: #18181B !important;
+      border: 3px solid var(--box-accent, #C8FF2E);
+      border-radius: 16px;
+      box-shadow: 0 0 16px var(--box-accent, #C8FF2E), inset 0 0 8px rgba(255, 255, 255, 0.12);
+    }
+
+    /* 6. Wireframe */
+    .tbox-outline {
+      background: rgba(255, 255, 255, 0.62) !important;
+      border: 3px dashed var(--box-border, #18181B);
+      border-radius: 16px;
+    }
+
+    /* 7. Clean Text */
+    .tbox-none {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
 
     .sticker-diecut {
-      filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(2px 3px 0 #141416);
+      filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(2px 3px 0 #18181B);
     }
 
     /* Freehand Drawing Canvas Overlay */
@@ -576,10 +871,10 @@
     }
 
     .slide-thumb {
-      width: 96px;
-      height: 54px;
-      border-radius: 10px;
-      border: 2.5px solid #141416;
+      width: 98px;
+      height: 55px;
+      border-radius: 11px;
+      border: var(--border);
       background: #fff;
       flex-shrink: 0;
       cursor: pointer;
@@ -591,21 +886,22 @@
       font-weight: 700;
       font-size: 0.85rem;
       position: relative;
-      transition: transform 0.14s var(--bounce);
+      transition: transform var(--fast) var(--snap);
     }
 
+    .slide-thumb:hover { transform: translateY(-2px) scale(1.04); }
     .slide-thumb.active {
       border-color: var(--violet);
-      box-shadow: 0 0 0 3px var(--lime), 3px 3px 0 #141416;
-      transform: translateY(-2px);
+      box-shadow: 0 0 0 3px var(--lime), 3px 3px 0 var(--ink);
+      transform: translateY(-3px) scale(1.04);
     }
 
-    /* Popover Drawers (Stickers, GIFs, Music) */
+    /* Modals */
     .drawer-modal {
       position: fixed;
       inset: 0;
-      background: rgba(20, 20, 22, 0.55);
-      backdrop-filter: blur(4px);
+      background: rgba(24, 24, 27, 0.58);
+      backdrop-filter: blur(5px);
       z-index: 200;
       display: none;
       align-items: center;
@@ -616,16 +912,16 @@
 
     .drawer-box {
       background: var(--bg);
-      border: var(--border);
+      border: var(--border-thick);
       border-radius: 26px;
       box-shadow: var(--shadow-lg);
-      max-width: 620px;
+      max-width: 630px;
       width: 100%;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      animation: popIn 0.25s var(--bounce);
+      animation: snapScreenIn 0.22s var(--snap);
     }
 
     .sticker-grid {
@@ -637,17 +933,18 @@
     }
 
     .sticker-item {
-      border: 2px solid #141416;
-      border-radius: 14px;
+      border: var(--border);
+      border-radius: 15px;
       background: #fff;
       padding: 10px 6px;
       text-align: center;
       cursor: pointer;
       font-weight: 700;
-      transition: transform 0.14s var(--bounce);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--fast) var(--snap), background 0.1s;
     }
     .sticker-item:hover {
-      transform: scale(1.08) rotate(-3deg);
+      transform: scale(1.1) rotate(-3deg);
       background: var(--lime);
     }
 
@@ -657,7 +954,7 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: radial-gradient(circle, #fff 15%, #FF2A55 55%, rgba(255,42,85,0) 75%);
+      background: radial-gradient(circle, #fff 15%, #FF2A55 55%, rgba(255, 42, 85, 0) 75%);
       box-shadow: 0 0 16px #FF2A55, 0 0 28px #FF2A55;
       pointer-events: none;
       transform: translate(-50%, -50%);
@@ -668,16 +965,33 @@
     .floating-reaction {
       position: fixed;
       bottom: 80px;
-      font-size: 2.6rem;
+      font-size: 2.8rem;
       pointer-events: none;
       z-index: 300;
-      animation: floatUp 2.2s ease-out forwards;
+      animation: floatUp 2.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes floatUp {
-      0% { opacity: 0; transform: translateY(20px) scale(0.5); }
-      15% { opacity: 1; transform: translateY(-20px) scale(1.2); }
-      100% { opacity: 0; transform: translateY(-340px) scale(0.9) rotate(12deg); }
+      0% { opacity: 0; transform: translateY(20px) scale(0.4); }
+      15% { opacity: 1; transform: translateY(-20px) scale(1.25); }
+      100% { opacity: 0; transform: translateY(-360px) scale(0.9) rotate(14deg); }
+    }
+
+    /* Sparkle Particle Burst */
+    .sparkle-particle {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1500;
+      animation: sparkleFly 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes sparkleFly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
     }
 
     /* Voting Pad */
@@ -695,29 +1009,29 @@
       border-radius: 20px;
       background: #fff;
       font-family: 'Fredoka', sans-serif;
-      font-size: 1.8rem;
+      font-size: 1.85rem;
       font-weight: 700;
       cursor: pointer;
       box-shadow: var(--shadow);
-      transition: transform 0.16s var(--bounce), background 0.15s;
+      transition: transform var(--fast) var(--snap), background 0.12s;
     }
 
     .vote-num-btn:hover {
-      transform: translateY(-4px) scale(1.06);
+      transform: translateY(-4px) scale(1.08);
       background: var(--yellow);
     }
 
     .vote-num-btn.picked {
       background: var(--lime);
-      transform: scale(1.1) rotate(-3deg);
-      box-shadow: 6px 6px 0 #141416;
+      transform: scale(1.12) rotate(-4deg);
+      box-shadow: 6px 6px 0 var(--ink);
     }
 
     /* TV-Show Dramatic Vote Reveal */
     .tv-arena {
-      background: radial-gradient(circle at 50% 20%, #2f1c6a 0%, #141416 80%);
+      background: radial-gradient(circle at 50% 20%, #341D7A 0%, #18181B 82%);
       color: #fff;
-      border: 4px solid #141416;
+      border: 4px solid var(--ink);
       border-radius: 28px;
       box-shadow: var(--shadow-lg);
       padding: 32px 24px;
@@ -731,10 +1045,10 @@
       top: -60px;
       width: 240px;
       height: 450px;
-      background: linear-gradient(180deg, rgba(198,255,51,0.22) 0%, rgba(198,255,51,0) 100%);
+      background: linear-gradient(180deg, rgba(200, 255, 46, 0.24) 0%, rgba(200, 255, 46, 0) 100%);
       transform-origin: top center;
       pointer-events: none;
-      animation: sweepLight 3.5s ease-in-out infinite alternate;
+      animation: sweepLight 3.2s ease-in-out infinite alternate;
     }
 
     @keyframes sweepLight {
@@ -752,30 +1066,31 @@
 
     .voter-reveal-card {
       width: 135px;
-      background: #232030;
+      background: #252236;
       border: 3px solid #fff;
       border-radius: 20px;
       padding: 14px 10px;
       box-shadow: 4px 4px 0 #000;
-      transition: transform 0.4s var(--bounce), background 0.3s ease;
+      transition: transform 0.35s var(--snap), background 0.25s ease;
     }
 
     .voter-reveal-card.flipped {
       background: var(--lime);
       color: var(--ink);
-      border-color: #141416;
-      transform: scale(1.08) rotate(-2deg);
+      border-color: var(--ink);
+      transform: scale(1.1) rotate(-2deg);
     }
 
     .voter-reveal-card.high-score {
       background: var(--yellow);
-      box-shadow: 0 0 25px var(--yellow);
+      box-shadow: 0 0 26px var(--yellow);
     }
 
     .big-odometer {
-      font-family: 'Bangers', cursive;
+      font-family: 'Fredoka', sans-serif;
       font-size: 5rem;
-      letter-spacing: 3px;
+      font-weight: 700;
+      letter-spacing: 2px;
       color: var(--lime);
       text-shadow: 4px 4px 0 #000;
       line-height: 1;
@@ -799,11 +1114,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      animation: riseUp 0.8s var(--bounce) backwards;
+      animation: riseUp 0.7s var(--snap) backwards;
     }
 
-    .podium-col.rank-1 { animation-delay: 0.45s; }
-    .podium-col.rank-2 { animation-delay: 0.2s; }
+    .podium-col.rank-1 { animation-delay: 0.4s; }
+    .podium-col.rank-2 { animation-delay: 0.18s; }
     .podium-col.rank-3 { animation-delay: 0.05s; }
 
     @keyframes riseUp {
@@ -813,9 +1128,9 @@
 
     .podium-block {
       width: 100%;
-      border: 3.5px solid #141416;
+      border: 3.5px solid var(--ink);
       border-radius: 22px 22px 12px 12px;
-      box-shadow: 6px 6px 0 #141416;
+      box-shadow: 6px 6px 0 var(--ink);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -828,16 +1143,6 @@
     .rank-1 .podium-block { height: 195px; background: var(--yellow); }
     .rank-2 .podium-block { height: 145px; background: var(--cyan); }
     .rank-3 .podium-block { height: 112px; background: var(--pink); }
-
-    .badge-tag {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 2px solid #141416;
-      font-size: 0.76rem;
-      font-weight: 700;
-      background: #fff;
-    }
   </style>
 </head>
 <body>
@@ -847,22 +1152,35 @@
     <div id="yt-player"></div>
   </div>
 
-  <!-- Top Persistent HUD -->
+  <!-- Toast Stack -->
+  <div id="toast-stack"></div>
+
+  <!-- Tactile Rubber-Band Drag Overlay (SVG Elastic Cord + Floating Preview) -->
+  <svg id="tactile-tether-svg">
+    <path id="tactile-tether-path" d="" fill="none" stroke="#18181B" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 6"/>
+    <circle id="tactile-anchor-dot" cx="0" cy="0" r="7" fill="#FF5454" stroke="#18181B" stroke-width="2.5"/>
+  </svg>
+  <div id="tactile-drag-ghost">
+    <div id="tactile-ghost-status" style="font-size:0.74rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--violet); margin-bottom:4px;">🧲 Pull to detach...</div>
+    <div id="tactile-ghost-preview"></div>
+  </div>
+
+  <!-- Glassmorphic Floating Top HUD -->
   <header id="top-hud">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <div class="logo-badge">🌐 WikiPitch!</div>
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <div class="logo-badge">🌐 PresentPerfect</div>
       <span id="hud-room-badge" class="bump-pill" style="display:none; background:var(--violet); color:#fff;">
         ROOM: <strong id="hud-room-code">----</strong>
       </span>
       <span id="hud-phase-label" class="bump-pill" style="background:var(--muted);">Lobby</span>
     </div>
 
-    <div id="hud-timer-box" style="display:none; align-items:center; gap:10px;">
+    <div id="hud-timer-box" style="display:none; align-items:center; gap:8px;">
       <div id="hud-timer" class="timer-pill">01:30</div>
       <button id="hud-host-skip" class="bump-btn sm coral" style="display:none;" onclick="hostForceNextPhase()">Skip ⏭</button>
     </div>
 
-    <div style="display:flex; align-items:center; gap:10px;">
+    <div style="display:flex; align-items:center; gap:8px;">
       <button id="sound-toggle-btn" class="bump-btn sm white" onclick="toggleSoundFX()">🔊 SFX ON</button>
       <div id="music-now-playing" class="bump-pill" style="display:none; background:var(--lime);">
         🎵 <span id="music-track-label">Track</span>
@@ -871,34 +1189,41 @@
     </div>
   </header>
 
-  <!-- Floating Wikipedia Text Selection Popover -->
-  <button id="wiki-selection-pop" onmousedown="addSelectedWikiTextToSlide(event)">➕ Drop Text onto Slide</button>
+  <!-- Floating Wikipedia Text Selection Popover (Supports Click OR Tactile Rubber-Band Pull!) -->
+  <div id="wiki-selection-pop" onmousedown="startSelectionTactileDrag(event)">
+    <span>🧲 Pull or Click to Drop Text</span>
+  </div>
 
   <!-- ==================== SCREEN 1: LANDING & LOBBY ==================== -->
   <main id="screen-lobby" class="screen active">
     <div id="setup-panel" class="hero-grid">
-      <!-- Left: Player Profile Card -->
+      <!-- Left: Player Profile & Join/Host Card -->
       <div class="bump-card" style="background:#fff;">
         <div class="bump-pill" style="background:var(--lime); margin-bottom:12px;">✨ STEP 1: YOUR VIBE</div>
-        <h1 style="font-size:2.3rem; margin:0 0 8px 0;">Drop into the Wiki Rabbit Hole!</h1>
-        <p style="margin:0 0 18px 0; color:#444;">Get a random Wikipedia article, speed-build an unhinged PowerPoint with stickers, GIFs &amp; YouTube music, and pitch it live to your friends.</p>
+        <h1 style="font-size:2.3rem; margin:0 0 8px 0;">Welcome to PresentPerfect!</h1>
+        <p style="margin:0 0 18px 0; color:#444; line-height:1.5;">Get a random (or hand-picked) Wikipedia article, speed-build a punchy PowerPoint with stickers, GIFs &amp; YouTube music, and pitch it live to your squad.</p>
 
-        <label style="font-weight:700; display:block; margin-bottom:6px;">Your Nickname</label>
+        <label style="font-weight:800; display:block; margin-bottom:6px;">Your Nickname</label>
         <input id="input-nickname" class="bump-input" type="text" maxlength="18" placeholder="e.g. CaptainCitation" />
 
-        <label style="font-weight:700; display:block; margin:16px 0 6px;">Pick Your Avatar</label>
+        <label style="font-weight:800; display:block; margin:16px 0 6px;">Pick Your Avatar</label>
         <div id="avatar-picker" class="avatar-picker"></div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:24px;">
-          <button class="bump-btn" style="background:var(--lime); padding:15px;" onclick="createRoom()">
-            🚀 Host New Room
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:22px;">
+          <button class="bump-btn" style="background:var(--lime); padding:14px;" onclick="createRoom(false)">
+            🚀 Host Multiplayer
           </button>
           <div style="display:flex; gap:8px;">
-            <input id="input-room-code" class="bump-input" style="text-transform:uppercase; text-align:center; letter-spacing:2px;" maxlength="4" placeholder="CODE" />
+            <input id="input-room-code" class="bump-input" style="text-transform:uppercase; text-align:center; letter-spacing:2px;" maxlength="4" placeholder="CODE" onkeydown="if(event.key==='Enter') joinRoom()" />
             <button class="bump-btn violet" onclick="joinRoom()">Join</button>
           </div>
         </div>
-        <p id="lobby-status-msg" style="margin:12px 0 0; font-weight:700; color:var(--coral); min-height:22px;"></p>
+
+        <button class="bump-btn cyan" style="width:100%; margin-top:12px;" onclick="createRoom(true)">
+          🎮 Solo Practice Mode (Instant Start)
+        </button>
+
+        <p id="lobby-status-msg" style="margin:10px 0 0; font-weight:700; color:var(--coral); min-height:20px;"></p>
       </div>
 
       <!-- Right: How It Works Card -->
@@ -906,23 +1231,23 @@
         <div class="bump-pill" style="background:#fff; margin-bottom:12px;">⚡ HOW TO PLAY</div>
         <div style="display:flex; flex-direction:column; gap:14px;">
           <div class="bump-card" style="padding:14px; border-radius:18px;">
-            <strong>1. 📖 Speed-Read (1–2 min)</strong><br/>
-            <span style="font-size:0.92rem;">Everyone gets a completely random Wikipedia page. Read fast and find the weirdest facts!</span>
+            <strong>1. 📖 Speed-Read or Pick</strong><br/>
+            <span style="font-size:0.92rem;">Play <b>Random Page Roulette</b> or <b>Choose Your Wiki Page</b> with live search across 9 Wikipedia languages!</span>
           </div>
           <div class="bump-card" style="padding:14px; border-radius:18px;">
-            <strong>2. 🎨 Chaos Slide Deck</strong><br/>
-            <span style="font-size:0.92rem;">Drag &amp; drop text and images straight from Wikipedia onto your slides. Add shapes, drawings, GIFs, stickers &amp; YouTube background music!</span>
+            <strong>2. 🧲 Rip &amp; Drop Slide Deck</strong><br/>
+            <span style="font-size:0.92rem;">Pull text &amp; images straight out of Wikipedia with rubber-band resistance. Configure 7 text box styles, shapes, ink drawings, GIFs &amp; YouTube music!</span>
           </div>
           <div class="bump-card" style="padding:14px; border-radius:18px;">
             <strong>3. 🎤 Live Pitch &amp; TV Vote Reveal</strong><br/>
-            <span style="font-size:0.92rem;">Control slides live for everyone while your YouTube track plays. Friends score 1–10 before a dramatic TV-show reveal &amp; podium!</span>
+            <span style="font-size:0.92rem;">Control slides &amp; laser pointer live for everyone while your YouTube track plays. Friends rate 1–10 before a dramatic TV reveal &amp; podium!</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Active Room Waiting Lobby -->
-    <div id="room-waiting-panel" style="display:none; max-width:980px; margin:20px auto;">
+    <div id="room-waiting-panel" style="display:none; max-width:1040px; margin:16px auto;">
       <div class="hero-grid" style="margin:0;">
         <!-- Players List -->
         <div class="bump-card">
@@ -937,7 +1262,13 @@
         <div class="bump-card" style="background:var(--muted);">
           <h2 style="margin:0 0 14px 0;">⚙️ Match Rules</h2>
 
-          <label style="font-weight:700; display:block; margin-bottom:5px;">🌐 Wikipedia Language</label>
+          <label style="font-weight:800; display:block; margin-bottom:5px;">🎯 Article Selection Mode</label>
+          <div class="mode-switch-group" style="margin-bottom:14px;">
+            <button id="mode-btn-random" class="mode-switch-btn active" onclick="setHostWikiMode('random')">🎲 Random Page Roulette</button>
+            <button id="mode-btn-choose" class="mode-switch-btn" onclick="setHostWikiMode('choose')">🔎 Choose Your Wiki Page</button>
+          </div>
+
+          <label style="font-weight:800; display:block; margin-bottom:5px;">🌐 Wikipedia Language</label>
           <select id="setting-lang" class="bump-select" onchange="syncHostSettings()">
             <option value="en">🇺🇸 English (en.wikipedia.org)</option>
             <option value="hu">🇭🇺 Magyar / Hungarian (hu.wikipedia.org)</option>
@@ -950,29 +1281,43 @@
             <option value="ja">🇯🇵 日本語 / Japanese (ja.wikipedia.org)</option>
           </select>
 
-          <label style="font-weight:700; display:block; margin:14px 0 5px;">📖 Reading Time (Wiki Only)</label>
-          <select id="setting-read-time" class="bump-select" onchange="syncHostSettings()">
-            <option value="60">1 Minute (60s)</option>
-            <option value="90" selected>1.5 Minutes (90s)</option>
-            <option value="120">2 Minutes (120s)</option>
-          </select>
-
-          <label style="font-weight:700; display:block; margin:14px 0 5px;">🎨 Slide Building Time</label>
-          <select id="setting-build-time" class="bump-select" onchange="syncHostSettings()">
-            <option value="120">2 Minutes (Speed Chaos)</option>
-            <option value="180">3 Minutes</option>
-            <option value="240" selected>4 Minutes (Recommended)</option>
-            <option value="300">5 Minutes</option>
-            <option value="420">7 Minutes (Masterpiece)</option>
-          </select>
-
-          <div id="host-start-area" style="margin-top:22px;">
-            <button class="bump-btn" style="width:100%; font-size:1.2rem; padding:16px;" onclick="hostStartGame()">
-              🎬 Start Game Now!
-            </button>
-            <p style="font-size:0.82rem; color:#555; text-align:center; margin:8px 0 0;">Works solo too if you want to test or practice!</p>
+          <div class="settings-row-3">
+            <div>
+              <label style="font-weight:800; font-size:0.82rem; display:block; margin-bottom:4px;">📖 Read Time</label>
+              <select id="setting-read-time" class="bump-select" style="padding:9px 10px;" onchange="syncHostSettings()">
+                <option value="30">30s</option>
+                <option value="60">60s</option>
+                <option value="90" selected>90s</option>
+                <option value="120">120s</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:800; font-size:0.82rem; display:block; margin-bottom:4px;">🎨 Build Time</label>
+              <select id="setting-build-time" class="bump-select" style="padding:9px 10px;" onchange="syncHostSettings()">
+                <option value="90">90s</option>
+                <option value="120">120s</option>
+                <option value="180" selected>180s</option>
+                <option value="240">240s</option>
+                <option value="300">300s</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:800; font-size:0.82rem; display:block; margin-bottom:4px;">🎤 Pitch Time</label>
+              <select id="setting-pitch-time" class="bump-select" style="padding:9px 10px;" onchange="syncHostSettings()">
+                <option value="30">30s</option>
+                <option value="60" selected>60s</option>
+                <option value="90">90s</option>
+                <option value="120">120s</option>
+              </select>
+            </div>
           </div>
-          <div id="guest-wait-area" style="display:none; margin-top:22px; text-align:center;">
+
+          <div id="host-start-area" style="margin-top:20px;">
+            <button class="bump-btn" style="width:100%; font-size:1.18rem; padding:15px;" onclick="hostStartGame()">
+              🎬 Start PresentPerfect!
+            </button>
+          </div>
+          <div id="guest-wait-area" style="display:none; margin-top:20px; text-align:center;">
             <div class="bump-pill" style="background:var(--yellow);">⏳ Waiting for host to start the game...</div>
           </div>
         </div>
@@ -980,14 +1325,14 @@
     </div>
   </main>
 
-  <!-- ==================== SCREEN 2: READING PHASE ==================== -->
+  <!-- ==================== SCREEN 2: READING / CHOOSING PHASE ==================== -->
   <section id="screen-reading" class="screen">
-    <div style="max-width:1000px; margin:0 auto;">
-      <div class="bump-card" style="background:var(--yellow); margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div style="max-width:1040px; margin:0 auto;">
+      <div class="bump-card" style="background:var(--yellow); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
-          <span class="badge-tag" style="background:var(--ink); color:var(--lime);">PHASE 1: INTEL GATHERING</span>
-          <h2 style="margin:6px 0 2px;">Study your secret Wikipedia article!</h2>
-          <p style="margin:0; font-size:0.92rem;">Slide tools unlock when the reading timer finishes (or everyone clicks Ready).</p>
+          <span class="badge-tag" id="read-phase-tag" style="background:var(--ink); color:var(--lime);">PHASE 1: RANDOM WIKI ROULETTE</span>
+          <h2 id="read-phase-heading" style="margin:6px 0 2px;">Study your secret Wikipedia article!</h2>
+          <p id="read-phase-sub" style="margin:0; font-size:0.9rem;">Slide studio unlocks when the timer finishes or everyone clicks Ready.</p>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <button id="reroll-wiki-btn" class="bump-btn sm white" onclick="rerollMyArticle()">🎲 Reroll Page (1 left)</button>
@@ -995,9 +1340,19 @@
         </div>
       </div>
 
-      <div class="wiki-viewer" style="height:calc(100vh - 235px); min-height:460px;">
+      <!-- Choose-Your-Wiki Search Drawer (Shown when wikiMode === 'choose') -->
+      <div id="choose-wiki-panel" class="bump-card" style="display:none; background:#fff; margin-bottom:14px; padding:16px;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="wiki-topic-search-input" class="bump-input" style="flex:1; min-width:220px;" placeholder="🔎 Search any Wikipedia topic (e.g. Axolotl, Emu War, Rubik's Cube)..." oninput="debouncedWikiSearch()" onkeydown="if(event.key==='Enter') runWikiTopicSearch()" />
+          <button class="bump-btn sm violet" onclick="runWikiTopicSearch()">Search</button>
+          <button class="bump-btn sm cyan" onclick="assignMyArticle(false)">🎲 Surprise Me</button>
+        </div>
+        <div id="wiki-search-results" class="wiki-search-results"></div>
+      </div>
+
+      <div class="wiki-viewer" style="height:calc(100vh - 255px); min-height:420px;">
         <div class="wiki-header-bar">
-          <strong id="read-wiki-title">Loading random Wikipedia article...</strong>
+          <strong id="read-wiki-title">Loading Wikipedia article...</strong>
           <span class="badge-tag" id="read-ready-counter">0/1 Ready</span>
         </div>
         <div id="read-wiki-body" class="wiki-content-scroll"></div>
@@ -1005,7 +1360,7 @@
     </div>
   </section>
 
-  <!-- ==================== SCREEN 3: POWERPOINT BUILDER ==================== -->
+  <!-- ==================== SCREEN 3: BUMP POWERPOINT STUDIO ==================== -->
   <section id="screen-building" class="screen">
     <div class="builder-layout">
       <!-- Left: Embedded Draggable Wikipedia Article -->
@@ -1015,7 +1370,7 @@
             <span>📖</span>
             <strong id="build-wiki-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Article</strong>
           </div>
-          <span class="badge-tag" style="background:var(--lime); flex-shrink:0;">Drag text/imgs ➡️</span>
+          <span class="badge-tag" style="background:var(--lime); flex-shrink:0;">🧲 Pull text/imgs ➡️</span>
         </div>
         <div id="build-wiki-body" class="wiki-content-scroll"></div>
       </div>
@@ -1028,13 +1383,13 @@
 
           <select id="shape-picker" class="tool-btn" onchange="if(this.value){addShape(this.value); this.value='';}">
             <option value="">🔷 + Shape</option>
+            <option value="star">⭐ Star</option>
+            <option value="arrow">➡️ Arrow</option>
+            <option value="badge">🏅 Badge</option>
+            <option value="heart">❤️ Heart</option>
+            <option value="speech">💬 Speech Bubble</option>
             <option value="rect">▬ Rectangle</option>
-            <option value="pill">💊 Rounded Pill</option>
             <option value="circle">🟡 Circle</option>
-            <option value="star">💥 Starburst</option>
-            <option value="bubble">💬 Speech Bubble</option>
-            <option value="arrow">➡️ Big Arrow</option>
-            <option value="triangle">🔺 Triangle</option>
           </select>
 
           <button id="btn-draw-mode" class="tool-btn" onclick="toggleDrawMode()">✏️ Draw</button>
@@ -1043,50 +1398,64 @@
           <button class="tool-btn" style="background:var(--cyan);" onclick="openModal('modal-music')">🎵 YT Music</button>
 
           <div style="margin-left:auto; display:flex; gap:6px;">
-            <button class="tool-btn" onclick="exportCurrentDeckAsPNGs()" title="Download all slides as PNGs">📸 PNGs</button>
-            <button id="btn-finish-deck" class="bump-btn sm" onclick="markDeckFinished()">✅ Done!</button>
+            <button class="tool-btn" onclick="exportCurrentDeckAsPNGs()" title="Download HD PNGs">📸 PNGs</button>
+            <button id="btn-finish-deck" class="bump-btn sm" onclick="markDeckFinished()">✅ Ready!</button>
           </div>
         </div>
 
         <!-- Contextual Element / Drawing / Slide Style Sub-bar -->
         <div class="ppt-subbar" id="ppt-subbar">
           <!-- Slide Background Controls -->
-          <span style="font-weight:700;">Slide BG:</span>
-          <input type="color" id="slide-bg-color" value="#ffffff" onchange="updateSlideBgColor(this.value)" title="Slide Background Color" style="width:28px; height:28px; border:2px solid #141416; border-radius:8px; cursor:pointer;" />
-          <select id="slide-bg-pattern" onchange="updateSlideBgPattern(this.value)" style="border:2px solid #141416; border-radius:8px; padding:3px 6px; font-weight:700;">
+          <span style="font-weight:800;">Slide:</span>
+          <input type="color" id="slide-bg-color" value="#ffffff" onchange="updateSlideBgColor(this.value)" title="Slide Background Color" style="width:26px; height:26px; border:2px solid var(--ink); border-radius:7px; cursor:pointer;" />
+          <select id="slide-bg-pattern" onchange="updateSlideBgPattern(this.value)" style="border:2px solid var(--ink); border-radius:8px; padding:3px 6px; font-weight:700;">
             <option value="">Solid</option>
             <option value="bg-dots">Dots</option>
             <option value="bg-grid">Grid</option>
+            <option value="bg-stripes">Stripes</option>
+            <option value="bg-confetti">Confetti</option>
             <option value="bg-sunset">Sunset</option>
             <option value="bg-cyber">Cyber Dark</option>
           </select>
 
           <span style="color:#ccc;">|</span>
 
-          <!-- Drawing Controls (shown when drawing active) -->
+          <!-- Drawing Controls -->
           <div id="draw-controls" style="display:none; align-items:center; gap:6px;">
-            <span style="font-weight:700; color:var(--coral);">Brush:</span>
-            <input type="color" id="draw-color" value="#FF5C5C" style="width:26px; height:26px; border:2px solid #141416; border-radius:6px;" />
-            <input type="range" id="draw-size" min="2" max="24" value="6" style="width:70px;" />
-            <button class="tool-btn" onclick="clearSlideDrawing()">🧹 Clear Ink</button>
+            <span style="font-weight:800; color:var(--coral);">Ink:</span>
+            <input type="color" id="draw-color" value="#FF5454" style="width:25px; height:25px; border:2px solid var(--ink); border-radius:6px;" />
+            <input type="range" id="draw-size" min="2" max="24" value="6" style="width:65px;" />
+            <button class="tool-btn" onclick="clearSlideDrawing()">🧹 Clear</button>
           </div>
 
           <!-- Selected Element Controls -->
-          <div id="el-controls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap;">
-            <select id="el-font" onchange="updateSelectedElStyle('font', this.value)" style="border:2px solid #141416; border-radius:8px; padding:3px 6px; font-weight:700;">
+          <div id="el-controls" style="display:none; align-items:center; gap:5px; flex-wrap:wrap;">
+            <select id="el-box-style" onchange="updateSelectedElStyle('boxStyle', this.value)" title="Text Box Frame Style" style="border:2px solid var(--ink); border-radius:8px; padding:3px 6px; font-weight:700; background:var(--yellow);">
+              <option value="bump">📦 Bump Card</option>
+              <option value="pill">💊 Capsule Pill</option>
+              <option value="speech">💬 Speech Bubble</option>
+              <option value="sticky">📝 Sticky Note</option>
+              <option value="neon">⚡ Neon Glow</option>
+              <option value="outline">🔲 Wireframe</option>
+              <option value="none">✨ Clean Text</option>
+            </select>
+            <select id="el-font" onchange="updateSelectedElStyle('font', this.value)" style="border:2px solid var(--ink); border-radius:8px; padding:3px 6px; font-weight:700;">
               <option value="Fredoka">Fredoka</option>
-              <option value="Space Grotesk">Space Grotesk</option>
-              <option value="Bangers">Bangers (Comic)</option>
-              <option value="Playfair Display">Playfair (Wiki)</option>
-              <option value="Caveat">Caveat (Hand)</option>
+              <option value="Plus Jakarta Sans">Jakarta</option>
+              <option value="Space Grotesk">Space</option>
+              <option value="Playfair Display">Playfair</option>
+              <option value="Comic Neue">Comic</option>
               <option value="JetBrains Mono">Mono</option>
             </select>
-            <input type="color" id="el-color" value="#141416" onchange="updateSelectedElStyle('color', this.value)" title="Color" style="width:26px; height:26px; border:2px solid #141416; border-radius:6px;" />
-            <input type="color" id="el-fill" value="#C6FF33" onchange="updateSelectedElStyle('fill', this.value)" title="Fill / Highlight" style="width:26px; height:26px; border:2px solid #141416; border-radius:6px;" />
-            <button class="tool-btn" onclick="updateSelectedElStyle('fontSize', 4)">A+</button>
-            <button class="tool-btn" onclick="updateSelectedElStyle('fontSize', -4)">A-</button>
-            <button class="tool-btn" onclick="bringSelectedForward()">⬆️</button>
-            <button class="tool-btn" onclick="deleteSelectedElement()" style="background:var(--coral); color:#fff;">🗑️</button>
+            <button id="el-bold-btn" class="tool-btn" onclick="toggleSelectedTextFormat('bold')" title="Bold"><b>B</b></button>
+            <button id="el-italic-btn" class="tool-btn" onclick="toggleSelectedTextFormat('italic')" title="Italic"><i>I</i></button>
+            <button id="el-align-btn" class="tool-btn" onclick="cycleSelectedTextAlign()" title="Text Alignment">↔️</button>
+            <input type="color" id="el-color" value="#18181B" onchange="updateSelectedElStyle('color', this.value)" title="Text Color" style="width:24px; height:24px; border:2px solid var(--ink); border-radius:6px;" />
+            <input type="color" id="el-fill" value="#C8FF2E" onchange="updateSelectedElStyle('fill', this.value)" title="Box / Shape Fill" style="width:24px; height:24px; border:2px solid var(--ink); border-radius:6px;" />
+            <input type="color" id="el-border-col" value="#18181B" onchange="updateSelectedElStyle('borderColor', this.value)" title="Border Color" style="width:24px; height:24px; border:2px solid var(--ink); border-radius:6px;" />
+            <button id="el-fit-btn" class="tool-btn" onclick="fitSelectedTextBoxNow()" title="Auto-fit box to text">📐 Fit</button>
+            <button class="tool-btn" onclick="bringSelectedForward()" title="Bring Forward">⬆️</button>
+            <button class="tool-btn" onclick="deleteSelectedElement()" style="background:var(--coral); color:#fff;" title="Delete">🗑️</button>
           </div>
         </div>
 
@@ -1110,18 +1479,17 @@
   <!-- ==================== SCREEN 4: LIVE PRESENTATION STAGE ==================== -->
   <section id="screen-presenting" class="screen">
     <div style="max-width:1050px; margin:0 auto;">
-      <!-- Presenter Header Banner -->
-      <div class="bump-card" style="background:var(--violet); color:#fff; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+      <div class="bump-card" style="background:var(--violet); color:#fff; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div style="display:flex; align-items:center; gap:14px;">
-          <div id="pres-avatar" class="player-avatar-circle" style="background:var(--lime); color:#141416; width:56px; height:56px; font-size:1.8rem;">🦊</div>
+          <div id="pres-avatar" class="player-avatar-circle" style="background:var(--lime); color:var(--ink); width:56px; height:56px; font-size:1.8rem;">🦊</div>
           <div>
-            <span class="badge-tag" style="background:var(--yellow); color:#141416;">NOW PRESENTING (<span id="pres-order-num">1/1</span>)</span>
-            <h2 style="margin:4px 0 0; font-size:1.6rem;"><span id="pres-name">Player</span> — "<span id="pres-topic">Topic</span>"</h2>
+            <span class="badge-tag" style="background:var(--yellow); color:var(--ink);">NOW PRESENTING (<span id="pres-order-num">1/1</span>)</span>
+            <h2 style="margin:4px 0 0; font-size:1.55rem;"><span id="pres-name">Player</span> — "<span id="pres-topic">Topic</span>"</h2>
           </div>
         </div>
 
         <div style="display:flex; align-items:center; gap:10px;">
-          <span class="bump-pill" style="color:#141416;">Slide <strong id="pres-slide-indicator">1 / 1</strong></span>
+          <span class="bump-pill" style="color:var(--ink);">Slide <strong id="pres-slide-indicator">1 / 1</strong></span>
           <button class="bump-btn sm white" onclick="exportPresentedDeckAsPNGs()">📸 Save PNGs</button>
         </div>
       </div>
@@ -1135,23 +1503,23 @@
         </div>
       </div>
 
-      <!-- Controls Bar: Presenter Navigation OR Audience Live Reactions -->
-      <div id="presenter-controls-bar" class="bump-card" style="display:none; margin-top:16px; background:var(--lime); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <!-- Presenter Navigation OR Audience Live Reactions -->
+      <div id="presenter-controls-bar" class="bump-card" style="display:none; margin-top:14px; background:var(--lime); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
         <div style="display:flex; gap:10px;">
-          <button class="bump-btn white" onclick="presenterChangeSlide(-1)">⬅️ Prev Slide</button>
-          <button class="bump-btn yellow" onclick="presenterChangeSlide(1)">Next Slide ➡️</button>
+          <button class="bump-btn white" onclick="presenterChangeSlide(-1)">⬅️ Prev</button>
+          <button class="bump-btn yellow" onclick="presenterChangeSlide(1)">Next ➡️</button>
         </div>
-        <span style="font-weight:700;">💡 Move mouse over slide for live Laser Pointer!</span>
-        <button class="bump-btn coral" onclick="presenterFinishPitch()">🎤 Finish Pitch &amp; Open Voting!</button>
+        <span style="font-weight:800;">💡 Move cursor over slide for live Laser Pointer!</span>
+        <button class="bump-btn coral" onclick="presenterFinishPitch()">🎤 Finish Pitch &amp; Vote!</button>
       </div>
 
-      <div id="audience-reactions-bar" class="bump-card" style="display:none; margin-top:16px; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px;">
-        <span style="font-weight:700;">Live Reactions:</span>
+      <div id="audience-reactions-bar" class="bump-card" style="display:none; margin-top:14px; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px;">
+        <span style="font-weight:800;">Live Reactions:</span>
+        <button class="bump-btn sm white" onclick="sendReaction('🔥')">🔥 Fire</button>
         <button class="bump-btn sm white" onclick="sendReaction('👏')">👏 Clap</button>
         <button class="bump-btn sm white" onclick="sendReaction('😂')">😂 LOL</button>
-        <button class="bump-btn sm white" onclick="sendReaction('🔥')">🔥 Fire</button>
         <button class="bump-btn sm white" onclick="sendReaction('🤯')">🤯 Mind Blown</button>
-        <button class="bump-btn sm white" onclick="sendReaction('💀')">💀 Dead</button>
+        <button class="bump-btn sm white" onclick="sendReaction('❤️')">❤️ Love</button>
         <button id="host-force-end-pitch" class="bump-btn sm coral" style="display:none; margin-left:auto;" onclick="presenterFinishPitch()">End Pitch ⏭</button>
       </div>
     </div>
@@ -1159,20 +1527,20 @@
 
   <!-- ==================== SCREEN 5: VOTING PHASE ==================== -->
   <section id="screen-voting" class="screen">
-    <div class="bump-card" style="max-width:680px; margin:24px auto; text-align:center;">
+    <div class="bump-card" style="max-width:680px; margin:20px auto; text-align:center;">
       <span class="badge-tag" style="background:var(--coral); color:#fff;">AUDIENCE SCORE</span>
       <h1 style="font-size:2.2rem; margin:10px 0 6px;">Rate <span id="vote-presenter-name">Player</span>'s Pitch!</h1>
       <p id="vote-topic-sub" style="color:#555; font-weight:700; margin:0 0 16px;">Topic</p>
 
       <div id="voter-pad-container">
         <div class="vote-grid" id="vote-buttons-grid"></div>
-        <p id="vote-flavor-text" style="font-weight:700; min-height:24px; color:var(--violet);">Tap a score from 1 to 10!</p>
+        <p id="vote-flavor-text" style="font-weight:800; min-height:24px; color:var(--violet);">Tap a score from 1 to 10!</p>
       </div>
 
       <div id="presenter-voting-wait" style="display:none; padding:24px;">
         <div style="font-size:3.5rem; margin-bottom:10px;">🙈</div>
         <h3>You are in the hot seat!</h3>
-        <p>Your friends are locking in their 1–10 scores right now...</p>
+        <p>Your squad is locking in their 1–10 scores right now...</p>
       </div>
 
       <div class="bump-pill" style="background:var(--muted); margin-top:10px;">
@@ -1186,22 +1554,22 @@
 
   <!-- ==================== SCREEN 6: TV-SHOW VOTE REVEAL ==================== -->
   <section id="screen-reveal" class="screen">
-    <div class="tv-arena" style="max-width:920px; margin:18px auto;">
+    <div class="tv-arena" style="max-width:920px; margin:16px auto;">
       <div class="tv-spotlight"></div>
-      <span class="badge-tag" style="background:var(--lime); color:#141416;">📺 LIVE SCOREBOARD REVEAL</span>
+      <span class="badge-tag" style="background:var(--lime); color:var(--ink);">📺 LIVE SCOREBOARD REVEAL</span>
       <h1 style="font-size:2.4rem; margin:10px 0 4px;" id="reveal-presenter-title">Player's Results</h1>
       <p style="color:#ccc; margin:0;" id="reveal-article-title">Article</p>
 
       <div id="reveal-cards-row" class="reveal-cards-row"></div>
 
       <div style="margin-top:10px;">
-        <div style="font-size:0.9rem; letter-spacing:2px; text-transform:uppercase; color:var(--cyan); font-weight:700;">TOTAL SCORE</div>
+        <div style="font-size:0.88rem; letter-spacing:2px; text-transform:uppercase; color:var(--cyan); font-weight:800;">TOTAL SCORE</div>
         <div id="reveal-odometer" class="big-odometer">0</div>
         <div id="reveal-avg-badge" class="bump-pill" style="background:var(--violet); color:#fff;">Average: 0.0 / 10</div>
       </div>
 
-      <div style="margin-top:26px;">
-        <button id="host-after-reveal-btn" class="bump-btn" style="display:none; font-size:1.15rem; padding:15px 30px;" onclick="hostAdvanceAfterReveal()">
+      <div style="margin-top:24px;">
+        <button id="host-after-reveal-btn" class="bump-btn" style="display:none; font-size:1.12rem; padding:14px 28px;" onclick="hostAdvanceAfterReveal()">
           ➡️ Next Presenter
         </button>
       </div>
@@ -1212,14 +1580,14 @@
   <section id="screen-podium" class="screen">
     <div style="max-width:980px; margin:10px auto; text-align:center;">
       <div class="bump-pill" style="background:var(--yellow);">🏆 FINAL STANDINGS</div>
-      <h1 style="font-size:2.8rem; margin:8px 0;">WikiPitch Champions!</h1>
+      <h1 style="font-size:2.8rem; margin:8px 0;">PresentPerfect Champions!</h1>
 
       <div id="podium-stage" class="podium-stage"></div>
 
-      <!-- Full Leaderboard & PNG Export Gallery -->
+      <!-- Full Leaderboard & HD PNG Export Gallery -->
       <div class="bump-card" style="text-align:left; margin-top:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-          <h2 style="margin:0;">📊 Full Leaderboard &amp; Slide Decks</h2>
+          <h2 style="margin:0;">📊 Full Leaderboard &amp; HD Slide Decks</h2>
           <button id="host-play-again-btn" class="bump-btn" style="display:none;" onclick="hostResetToLobby()">🔄 Play Another Round</button>
         </div>
         <div id="podium-full-list" style="display:flex; flex-direction:column; gap:12px;"></div>
@@ -1228,18 +1596,16 @@
   </section>
 
   <!-- ==================== MODALS (STICKERS, GIFS, YOUTUBE MUSIC) ==================== -->
-  <!-- Stickers Modal -->
   <div id="modal-stickers" class="drawer-modal" onclick="if(event.target===this) closeModal('modal-stickers')">
     <div class="drawer-box">
       <div style="padding:14px 18px; background:var(--lime); border-bottom:var(--border); display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0;">🏷️ Bump Sticker Pack</h3>
+        <h3 style="margin:0;">🏷️ Die-Cut Sticker Pack</h3>
         <button class="bump-btn sm white" onclick="closeModal('modal-stickers')">✕</button>
       </div>
       <div id="sticker-grid" class="sticker-grid"></div>
     </div>
   </div>
 
-  <!-- GIFs Modal -->
   <div id="modal-gifs" class="drawer-modal" onclick="if(event.target===this) closeModal('modal-gifs')">
     <div class="drawer-box">
       <div style="padding:14px 18px; background:var(--pink); border-bottom:var(--border); display:flex; justify-content:space-between; align-items:center;">
@@ -1254,7 +1620,6 @@
     </div>
   </div>
 
-  <!-- YouTube Music Modal -->
   <div id="modal-music" class="drawer-modal" onclick="if(event.target===this) closeModal('modal-music')">
     <div class="drawer-box">
       <div style="padding:14px 18px; background:var(--cyan); border-bottom:var(--border); display:flex; justify-content:space-between; align-items:center;">
@@ -1262,17 +1627,17 @@
         <button class="bump-btn sm white" onclick="closeModal('modal-music')">✕</button>
       </div>
       <div style="padding:18px; overflow-y:auto;">
-        <label style="font-weight:700; display:block; margin-bottom:6px;">Paste any YouTube Link or Video ID</label>
+        <label style="font-weight:800; display:block; margin-bottom:6px;">Paste any YouTube Link or Video ID</label>
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <input id="yt-url-input" class="bump-input" placeholder="https://www.youtube.com/watch?v=..." />
           <input id="yt-start-sec" class="bump-input" type="number" min="0" value="0" style="width:95px;" title="Start at second" placeholder="Sec" />
           <button class="bump-btn sm" onclick="applyCustomYoutube()">Set &amp; Test</button>
         </div>
 
-        <p style="font-weight:700; margin:14px 0 8px;">⚡ Or pick an instant presentation vibe:</p>
+        <p style="font-weight:800; margin:14px 0 8px;">⚡ Or pick an instant party vibe:</p>
         <div id="yt-presets-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div>
 
-        <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; background:var(--muted); padding:10px 14px; border-radius:14px; border:2px solid #141416;">
+        <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; background:var(--muted); padding:10px 14px; border-radius:14px; border:var(--border);">
           <span>Selected: <strong id="yt-selected-title">None</strong></span>
           <button class="bump-btn sm coral" onclick="clearYoutubeTrack()">Remove Music</button>
         </div>
@@ -1282,7 +1647,24 @@
 
 <script>
 /* ============================================================================
-   1. SOUND SYNTHESIZER (Tactile Bump Pop Effects, Drumroll, Fanfare)
+   1. TOAST MESSAGE SYSTEM (Zero alert() / confirm() calls!)
+   ============================================================================ */
+function showToast(message, variant = 'dark', duration = 3000) {
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = 'bump-toast ' + variant;
+  el.textContent = message;
+  stack.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(10px) scale(0.95)';
+    el.style.transition = 'all 0.18s ease';
+    setTimeout(() => el.remove(), 200);
+  }, duration);
+}
+
+/* ============================================================================
+   2. WEB AUDIO TACTILE SOUND SYNTHESIZER & SPARKLE BURSTS
    ============================================================================ */
 let sfxEnabled = true;
 let audioCtx = null;
@@ -1298,46 +1680,117 @@ function getAudioCtx() {
 function toggleSoundFX() {
   sfxEnabled = !sfxEnabled;
   document.getElementById('sound-toggle-btn').textContent = sfxEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
-  if (sfxEnabled) playPop(520);
+  if (sfxEnabled) playSnappyPop(560);
 }
 
-function playPop(freq = 440, duration = 0.08, type = 'sine') {
+function playSnappyPop(freq = 480, duration = 0.075) {
   if (!sfxEnabled) return;
   try {
     const ctx = getAudioCtx();
+    const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freq * 1.45, ctx.currentTime + duration);
-    gain.gain.setValueAtTime(0.16, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.55, now + duration);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
+    osc.start(now);
+    osc.stop(now + duration);
   } catch (e) {}
 }
 
+let lastStretchSoundTime = 0;
+function playElasticStretch(ratio) {
+  if (!sfxEnabled) return;
+  const nowMs = Date.now();
+  if (nowMs - lastStretchSoundTime < 65) return;
+  lastStretchSoundTime = nowMs;
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    const baseFreq = 190 + Math.min(1, ratio) * 290;
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 28, now + 0.05);
+    gain.gain.setValueAtTime(0.07, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  } catch (e) {}
+}
+
+function playElasticSnap() {
+  if (!sfxEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(940, now + 0.09);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.11);
+    setTimeout(() => playSnappyPop(760, 0.08), 35);
+  } catch (e) {}
+}
+
+function playDropThud() {
+  if (!sfxEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const sub = ctx.createOscillator();
+    const g = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(190, now);
+    sub.frequency.exponentialRampToValueAtTime(52, now + 0.14);
+    g.gain.setValueAtTime(0.28, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    sub.connect(g);
+    g.connect(ctx.destination);
+    sub.start(now);
+    sub.stop(now + 0.16);
+    setTimeout(() => playSnappyPop(640, 0.07), 30);
+  } catch (e) {}
+}
+
+function playSlideWhoosh() {
+  if (!sfxEnabled) return;
+  playSnappyPop(380, 0.06);
+  setTimeout(() => playSnappyPop(540, 0.06), 35);
+}
+
 function playTick(urgent = false) {
-  playPop(urgent ? 880 : 600, 0.05, 'triangle');
+  playSnappyPop(urgent ? 900 : 620, 0.045);
 }
 
 function playVoteFlip(score) {
   if (!sfxEnabled) return;
-  const base = 320 + score * 48;
-  playPop(base, 0.16, 'triangle');
+  const base = 330 + score * 50;
+  playSnappyPop(base, 0.14);
   if (score >= 9) {
-    setTimeout(() => playPop(base * 1.25, 0.2, 'sine'), 90);
-    setTimeout(() => playPop(base * 1.5, 0.28, 'sine'), 180);
+    setTimeout(() => playSnappyPop(base * 1.25, 0.18), 85);
+    setTimeout(() => playSnappyPop(base * 1.5, 0.25), 170);
   }
 }
 
-function playDrumroll(durationMs = 1800) {
+function playDrumroll(durationMs = 1500) {
   if (!sfxEnabled) return;
   const steps = 18;
   for (let i = 0; i < steps; i++) {
-    setTimeout(() => playPop(150 + i * 14, 0.05, 'triangle'), (durationMs / steps) * i);
+    setTimeout(() => playSnappyPop(145 + i * 15, 0.045), (durationMs / steps) * i);
   }
 }
 
@@ -1345,17 +1798,32 @@ function playFanfare() {
   if (!sfxEnabled) return;
   const notes = [523.25, 659.25, 783.99, 1046.5];
   notes.forEach((n, idx) => {
-    setTimeout(() => playPop(n, 0.26, 'triangle'), idx * 110);
+    setTimeout(() => playSnappyPop(n, 0.24), idx * 95);
   });
 }
 
+function spawnSparkles(x, y, colors = ['#C8FF2E', '#8F6BFF', '#FFE600', '#3BE8E0']) {
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'sparkle-particle';
+    const angle = (Math.PI * 2 * i) / 10 + (Math.random() - 0.5) * 0.4;
+    const dist = 34 + Math.random() * 44;
+    p.style.left = (x - 5) + 'px';
+    p.style.top = (y - 5) + 'px';
+    p.style.background = colors[i % colors.length];
+    p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+    p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 500);
+  }
+}
+
 /* ============================================================================
-   2. YOUTUBE IFRAME BACKGROUND MUSIC CONTROLLER
+   3. YOUTUBE IFRAME BACKGROUND MUSIC CONTROLLER
    ============================================================================ */
 let ytPlayer = null;
 let ytReady = false;
 let ytMuted = false;
-let currentPlayingYtId = null;
 
 const YT_PRESETS = [
   { title: '☕ Wii Shop Bossa Nova', id: 'u3pQv9mmZMk', start: 0 },
@@ -1366,7 +1834,6 @@ const YT_PRESETS = [
   { title: '🕹️ 8-Bit Arcade Rush', id: '1G4isv_Fylg', start: 0 }
 ];
 
-// Load YouTube IFrame API asynchronously
 (function loadYT() {
   const tag = document.createElement('script');
   tag.src = 'https://www.youtube.com/iframe_api';
@@ -1382,8 +1849,7 @@ window.onYouTubeIframeAPIReady = function() {
     events: {
       onReady: () => { ytReady = true; },
       onError: (e) => {
-        console.warn('YouTube embed error:', e.data);
-        alert('Note: That YouTube video disables external embedding (Error ' + e.data + '). Try another video or pick one of the preset tracks!');
+        showToast('YouTube video disabled external embed (Error ' + e.data + '). Try a preset track!', 'coral', 4000);
       }
     }
   });
@@ -1405,7 +1871,6 @@ function playYoutubeMusic(videoId, startSec = 0, label = 'YouTube Track') {
   }
   badge.style.display = 'inline-flex';
   document.getElementById('music-track-label').textContent = label;
-  currentPlayingYtId = videoId;
   if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
     ytPlayer.loadVideoById({ videoId: videoId, startSeconds: Number(startSec) || 0 });
     ytPlayer.setVolume(ytMuted ? 0 : 45);
@@ -1413,7 +1878,6 @@ function playYoutubeMusic(videoId, startSec = 0, label = 'YouTube Track') {
 }
 
 function stopYoutubeMusic() {
-  currentPlayingYtId = null;
   document.getElementById('music-now-playing').style.display = 'none';
   if (ytReady && ytPlayer && ytPlayer.stopVideo) {
     try { ytPlayer.stopVideo(); } catch (e) {}
@@ -1430,11 +1894,11 @@ function toggleMusicMute() {
 }
 
 /* ============================================================================
-   3. GAME STATE & PEERJS P2P MULTIPLAYER ENGINE
+   4. GAME STATE & PEERJS P2P MULTIPLAYER ENGINE
    ============================================================================ */
-const AVATARS = ['🦊', '🐸', '🐙', '🦖', '🦄', '🐼', '🐯', '👽', '🤖', '🐧', '🦆', '🐝'];
-const BADGE_COLORS = ['#C6FF33', '#9D7BFF', '#FF5C5C', '#4DEEEA', '#FFE600', '#FF85E4'];
-const ROOM_PREFIX = 'wikipitch-gh-2026-';
+const AVATARS = ['🦊', '🐸', '🐙', '🦖', '🦄', '🐼', '🐯', '👽', '🤖', '🐧', '🦆', '🐝', '🦝', '🐨', '🐲', '🦩'];
+const BADGE_COLORS = ['#C8FF2E', '#8F6BFF', '#FF5454', '#3BE8E0', '#FFE600', '#FF7EE2'];
+const ROOM_PREFIX = 'presentperfect-gh-2026-';
 
 let myId = 'p_' + Math.random().toString(36).slice(2, 9);
 let myProfile = {
@@ -1445,47 +1909,48 @@ let myProfile = {
 };
 
 let isHost = false;
+let isSoloPractice = false;
 let roomCode = '';
 let peer = null;
-let hostConn = null;          // Client -> Host connection
-let clientConns = {};         // Host -> Clients map { peerId: DataConnection }
+let hostConn = null;
+let clientConns = {};
 let localTimerInterval = null;
 
-// Authoritative Game State (Synced from Host to all Clients)
+// Authoritative Game State
 let gameState = {
   phase: 'LOBBY', // LOBBY | READING | BUILDING | PRESENTING | VOTING | REVEAL | PODIUM
   settings: {
+    wikiMode: 'random', // 'random' | 'choose'
     lang: 'en',
     readTime: 90,
-    buildTime: 240
+    buildTime: 180,
+    pitchTime: 60
   },
   phaseEndTime: 0,
-  players: {},        // { id: { id, name, avatar, color, isHost, ready, article, rerolled, deck, music, totalScore } }
-  presentOrder: [],   // [playerId, ...]
+  players: {},
+  presentOrder: [],
   currentPresIdx: 0,
   currentSlideIdx: 0,
-  votes: {},          // { presenterId: { voterId: number } }
-  revealStep: 0
+  votes: {}
 };
 
-// Initialize Avatar Picker & Presets on Load
 window.addEventListener('DOMContentLoaded', () => {
   const picker = document.getElementById('avatar-picker');
   AVATARS.forEach((emo, i) => {
     const btn = document.createElement('div');
     btn.className = 'avatar-opt' + (i === 0 ? ' selected' : '');
     btn.textContent = emo;
-    btn.onclick = () => {
+    btn.onclick = (e) => {
       document.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
       btn.classList.add('selected');
       myProfile.avatar = emo;
       myProfile.color = BADGE_COLORS[i % BADGE_COLORS.length];
-      playPop(500);
+      playSnappyPop(540);
+      spawnSparkles(e.clientX, e.clientY);
     };
     picker.appendChild(btn);
   });
 
-  // Check URL ?room=XXXX query param
   const urlParams = new URLSearchParams(window.location.search);
   const urlRoom = urlParams.get('room');
   if (urlRoom) {
@@ -1508,17 +1973,36 @@ function generateRoomCode() {
 function getNicknameOrDefault() {
   const val = document.getElementById('input-nickname').value.trim();
   if (val) return val;
-  const fallback = 'WikiPlayer' + Math.floor(10 + Math.random() * 89);
+  const fallback = 'Presenter' + Math.floor(10 + Math.random() * 89);
   document.getElementById('input-nickname').value = fallback;
   return fallback;
 }
 
-/* ---------- HOST ROOM ---------- */
-function createRoom() {
+function createRoom(soloMode = false) {
   myProfile.name = getNicknameOrDefault();
   isHost = true;
-  roomCode = generateRoomCode();
+  isSoloPractice = soloMode;
+  roomCode = soloMode ? 'SOLO' : generateRoomCode();
   const statusEl = document.getElementById('lobby-status-msg');
+
+  if (soloMode) {
+    playFanfare();
+    gameState.players[myId] = {
+      ...myProfile,
+      isHost: true,
+      ready: false,
+      article: null,
+      rerolled: false,
+      deck: createDefaultDeck(),
+      music: null,
+      totalScore: 0
+    };
+    enterWaitingLobby();
+    broadcastState();
+    showToast('Solo Practice Lobby Ready! Configure rules & click Start.', 'cyan');
+    return;
+  }
+
   statusEl.style.color = 'var(--ink)';
   statusEl.textContent = 'Creating P2P room...';
 
@@ -1533,7 +2017,7 @@ function createRoom() {
       ready: false,
       article: null,
       rerolled: false,
-      deck: createDefaultDeck(myProfile.name),
+      deck: createDefaultDeck(),
       music: null,
       totalScore: 0
     };
@@ -1558,7 +2042,6 @@ function createRoom() {
   });
 }
 
-/* ---------- JOIN ROOM ---------- */
 function joinRoom() {
   const codeInput = document.getElementById('input-room-code').value.trim().toUpperCase();
   const statusEl = document.getElementById('lobby-status-msg');
@@ -1570,6 +2053,7 @@ function joinRoom() {
 
   myProfile.name = getNicknameOrDefault();
   isHost = false;
+  isSoloPractice = false;
   roomCode = codeInput;
   statusEl.style.color = 'var(--ink)';
   statusEl.textContent = 'Connecting to room ' + roomCode + '...';
@@ -1578,19 +2062,18 @@ function joinRoom() {
   peer.on('open', () => {
     hostConn = peer.connect(ROOM_PREFIX + roomCode, { reliable: true });
     hostConn.on('open', () => {
-      playPop(620);
+      playSnappyPop(640);
       statusEl.textContent = '';
       hostConn.send({ type: 'JOIN', profile: myProfile });
       enterWaitingLobby();
-      // Keepalive heartbeat
       setInterval(() => {
         if (hostConn && hostConn.open) hostConn.send({ type: 'PING' });
       }, 5000);
     });
     hostConn.on('data', (msg) => handleClientMessage(msg));
     hostConn.on('close', () => {
-      alert('Disconnected from host!');
-      location.reload();
+      showToast('Disconnected from host! Returning to lobby...', 'coral', 3500);
+      setTimeout(() => location.reload(), 1800);
     });
   });
 
@@ -1610,18 +2093,35 @@ function enterWaitingLobby() {
   document.getElementById('setting-lang').disabled = !isHost;
   document.getElementById('setting-read-time').disabled = !isHost;
   document.getElementById('setting-build-time').disabled = !isHost;
+  document.getElementById('setting-pitch-time').disabled = !isHost;
+  document.getElementById('mode-btn-random').disabled = !isHost;
+  document.getElementById('mode-btn-choose').disabled = !isHost;
   renderLobbyPlayers();
 }
 
 function copyInviteLink() {
   const url = new URL(window.location.href);
   url.searchParams.set('room', roomCode);
-  navigator.clipboard.writeText(url.toString());
-  playPop(700);
-  alert('Invite link copied! Share it with your friends:\n' + url.toString());
+  const shareUrl = url.toString();
+
+  // iFrame-safe clipboard copy using temporary textarea + execCommand('copy')
+  const ta = document.createElement('textarea');
+  ta.value = shareUrl;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    playSnappyPop(720);
+    showToast('🔗 Invite link copied! (?room=' + roomCode + ')', 'lime');
+  } catch (e) {
+    showToast('Share Room Code: ' + roomCode, 'cyan');
+  }
+  ta.remove();
 }
 
-/* ---------- MESSAGE ROUTING (HOST & CLIENT) ---------- */
+/* ---------- MESSAGE ROUTING ---------- */
 function sendToHost(payload) {
   if (isHost) {
     handleHostMessage(null, payload);
@@ -1633,9 +2133,7 @@ function sendToHost(payload) {
 function broadcastState() {
   if (!isHost) return;
   const packet = { type: 'STATE_SYNC', state: gameState };
-  Object.values(clientConns).forEach(c => {
-    if (c.open) c.send(packet);
-  });
+  Object.values(clientConns).forEach(c => { if (c.open) c.send(packet); });
   applyGameState(gameState);
 }
 
@@ -1664,10 +2162,11 @@ function handleHostMessage(conn, msg) {
         ready: false,
         article: null,
         rerolled: false,
-        deck: createDefaultDeck(p.name),
+        deck: createDefaultDeck(),
         music: null,
         totalScore: 0
       };
+      showToast(p.avatar + ' ' + p.name + ' joined the room!', 'lime');
       broadcastState();
       break;
     }
@@ -1677,7 +2176,6 @@ function handleHostMessage(conn, msg) {
         pl.ready = msg.ready;
         if (msg.deck) pl.deck = msg.deck;
         if (msg.music !== undefined) pl.music = msg.music;
-        // Check if ALL players are ready
         const allPlayers = Object.values(gameState.players);
         if (allPlayers.length > 0 && allPlayers.every(x => x.ready)) {
           hostAdvancePhase();
@@ -1712,9 +2210,10 @@ function handleHostMessage(conn, msg) {
     case 'FINISH_PITCH': {
       const presId = gameState.presentOrder[gameState.currentPresIdx];
       gameState.phase = 'VOTING';
+      gameState.phaseEndTime = 0;
       gameState.votes[presId] = {};
-      // If solo player (1 player in room), auto-generate fun bot audience scores so solo testing works!
       const ids = Object.keys(gameState.players);
+      // Simulated judges when testing solo so TV reveal & podium shine!
       if (ids.length === 1) {
         gameState.votes[presId]['bot_judge_1'] = Math.floor(7 + Math.random() * 4);
         gameState.votes[presId]['bot_judge_2'] = Math.floor(6 + Math.random() * 5);
@@ -1739,7 +2238,6 @@ function handleHostMessage(conn, msg) {
     }
     case 'LASER':
     case 'REACTION': {
-      // Relay to all clients + apply on host
       Object.values(clientConns).forEach(c => { if (c.open) c.send(msg); });
       handleEphemeral(msg);
       break;
@@ -1757,51 +2255,57 @@ function handleClientMessage(msg) {
 }
 
 /* ============================================================================
-   4. WIKIPEDIA RANDOM ARTICLE FETCHER (CORS-Enabled MediaWiki API)
+   5. WIKIPEDIA FETCHER & "CHOOSE YOUR WIKI PAGE" SEARCH ENGINE
    ============================================================================ */
+async function fetchWikipediaArticleByTitle(title, lang = 'en') {
+  try {
+    const summaryRes = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    const summary = await summaryRes.json();
+    const resolvedTitle = summary?.title || title;
+
+    const parseUrl = `https://${lang}.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(resolvedTitle)}&prop=text&disableeditsection=1&format=json&origin=*`;
+    const parseRes = await fetch(parseUrl);
+    const parseData = await parseRes.json();
+    let rawHtml = parseData?.parse?.text?.['*'] || `<p>${summary?.extract || ''}</p>`;
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHtml, 'text/html');
+    doc.querySelectorAll('script, style, .mw-empty-elt, .hatnote, .shortdescription, .ambox').forEach(el => el.remove());
+    doc.querySelectorAll('a').forEach(a => {
+      a.removeAttribute('href');
+      a.style.color = '#18181B';
+      a.style.textDecoration = 'underline dotted';
+    });
+    doc.querySelectorAll('img').forEach(img => {
+      let src = img.getAttribute('src') || '';
+      if (src.startsWith('//')) src = 'https:' + src;
+      img.setAttribute('src', src);
+      img.setAttribute('draggable', 'false');
+      img.setAttribute('crossorigin', 'anonymous');
+    });
+
+    return {
+      title: resolvedTitle,
+      extract: summary?.extract || '',
+      thumbnail: summary?.thumbnail?.source || null,
+      html: doc.body.innerHTML,
+      lang
+    };
+  } catch (e) {
+    console.warn('Wiki fetch by title failed:', e);
+    return null;
+  }
+}
+
 async function fetchRandomWikipediaArticle(lang = 'en') {
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
       const summaryRes = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
       const summary = await summaryRes.json();
       if (!summary || !summary.title || summary.type !== 'standard') continue;
-
-      const parseUrl = `https://${lang}.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(summary.title)}&prop=text&disableeditsection=1&format=json&origin=*`;
-      const parseRes = await fetch(parseUrl);
-      const parseData = await parseRes.json();
-      let rawHtml = parseData?.parse?.text?.['*'] || `<p>${summary.extract}</p>`;
-
-      // Clean relative Wikipedia links & protocol-less image URLs
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(rawHtml, 'text/html');
-      doc.querySelectorAll('script, style, .mw-empty-elt, .hatnote, .shortdescription, .ambox').forEach(el => el.remove());
-      doc.querySelectorAll('a').forEach(a => {
-        a.removeAttribute('href');
-        a.style.color = '#141416';
-        a.style.textDecoration = 'underline dotted';
-      });
-      doc.querySelectorAll('img').forEach(img => {
-        let src = img.getAttribute('src') || '';
-        if (src.startsWith('//')) src = 'https:' + src;
-        // Prefer larger clean thumbnail if tiny
-        img.setAttribute('src', src);
-        img.setAttribute('draggable', 'true');
-        img.setAttribute('crossorigin', 'anonymous');
-      });
-
-      const cleanBody = doc.body.innerHTML;
-      if (cleanBody.length < 350) continue; // Skip stub pages
-
-      return {
-        title: summary.title,
-        extract: summary.extract || '',
-        thumbnail: summary.thumbnail?.source || null,
-        html: cleanBody,
-        lang
-      };
-    } catch (e) {
-      console.warn('Wiki fetch retry:', e);
-    }
+      const full = await fetchWikipediaArticleByTitle(summary.title, lang);
+      if (full && full.html && full.html.length >= 350) return full;
+    } catch (e) {}
   }
   return {
     title: 'The Great Emu War',
@@ -1815,32 +2319,88 @@ async function fetchRandomWikipediaArticle(lang = 'en') {
 async function assignMyArticle(isReroll = false) {
   const lang = gameState.settings.lang || 'en';
   document.getElementById('read-wiki-title').textContent = 'Fetching random Wikipedia page...';
-  document.getElementById('read-wiki-body').innerHTML = '<div style="padding:40px; text-align:center; font-size:1.3rem;">🎲 Spinning the Wikipedia globe...</div>';
+  document.getElementById('read-wiki-body').innerHTML = '<div style="padding:40px; text-align:center; font-size:1.25rem; font-weight:700;">🎲 Spinning the Wikipedia globe...</div>';
   const article = await fetchRandomWikipediaArticle(lang);
   sendToHost({ type: 'SET_ARTICLE', playerId: myId, article, rerolled: isReroll });
+}
+
+async function selectChosenWikiTitle(title) {
+  playSnappyPop(640);
+  const lang = gameState.settings.lang || 'en';
+  document.getElementById('read-wiki-title').textContent = `Loading "${title}"...`;
+  document.getElementById('read-wiki-body').innerHTML = '<div style="padding:40px; text-align:center; font-size:1.25rem; font-weight:700;">📖 Pulling article from Wikipedia...</div>';
+  const article = await fetchWikipediaArticleByTitle(title, lang);
+  if (article) {
+    playDropThud();
+    showToast('📄 Selected: ' + article.title, 'lime');
+    sendToHost({ type: 'SET_ARTICLE', playerId: myId, article, rerolled: false });
+  }
+}
+
+let wikiSearchTimeout = null;
+function debouncedWikiSearch() {
+  clearTimeout(wikiSearchTimeout);
+  wikiSearchTimeout = setTimeout(runWikiTopicSearch, 260);
+}
+
+async function runWikiTopicSearch() {
+  const q = document.getElementById('wiki-topic-search-input').value.trim();
+  const grid = document.getElementById('wiki-search-results');
+  if (!q) {
+    grid.innerHTML = '';
+    return;
+  }
+  const lang = gameState.settings.lang || 'en';
+  try {
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=6&format=json&origin=*`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const hits = data?.query?.search || [];
+    grid.innerHTML = '';
+    hits.forEach(hit => {
+      const card = document.createElement('div');
+      card.className = 'wiki-search-card';
+      const cleanSnippet = hit.snippet.replace(/<[^>]+>/g, '');
+      card.innerHTML = `
+        <div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:1rem; margin-bottom:3px;">📄 ${escapeHtml(hit.title)}</div>
+        <div style="font-size:0.78rem; color:#444; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(cleanSnippet)}...</div>
+      `;
+      card.onclick = () => selectChosenWikiTitle(hit.title);
+      grid.appendChild(card);
+    });
+  } catch (e) {}
 }
 
 function rerollMyArticle() {
   const me = gameState.players[myId];
   if (!me || me.rerolled) return;
-  playPop(680);
+  playSnappyPop(680);
   document.getElementById('reroll-wiki-btn').disabled = true;
   document.getElementById('reroll-wiki-btn').textContent = '🎲 Reroll Used';
   assignMyArticle(true);
 }
 
 /* ============================================================================
-   5. PHASE TRANSITIONS & SYNCHRONIZED STATE RENDERER
+   6. PHASE TRANSITIONS & SYNCHRONIZED STATE RENDERER
    ============================================================================ */
 let lastRenderedPhase = null;
 let lastRenderedPresIdx = -1;
 let lastRevealedKey = '';
 
+function setHostWikiMode(mode) {
+  if (!isHost) return;
+  playSnappyPop(580);
+  gameState.settings.wikiMode = mode;
+  broadcastState();
+}
+
 function syncHostSettings() {
   if (!isHost) return;
+  playSnappyPop(520);
   gameState.settings.lang = document.getElementById('setting-lang').value;
   gameState.settings.readTime = Number(document.getElementById('setting-read-time').value);
   gameState.settings.buildTime = Number(document.getElementById('setting-build-time').value);
+  gameState.settings.pitchTime = Number(document.getElementById('setting-pitch-time').value);
   broadcastState();
 }
 
@@ -1852,7 +2412,7 @@ function hostStartGame() {
     p.article = null;
     p.rerolled = false;
     p.totalScore = 0;
-    p.deck = createDefaultDeck(p.name);
+    p.deck = createDefaultDeck();
   });
   gameState.votes = {};
   gameState.phase = 'READING';
@@ -1862,8 +2422,12 @@ function hostStartGame() {
 
 function hostForceNextPhase() {
   if (!isHost) return;
-  playPop(700);
-  hostAdvancePhase();
+  playSnappyPop(700);
+  if (gameState.phase === 'PRESENTING') {
+    presenterFinishPitch();
+  } else {
+    hostAdvancePhase();
+  }
 }
 
 function hostAdvancePhase() {
@@ -1874,7 +2438,6 @@ function hostAdvancePhase() {
     gameState.phaseEndTime = Date.now() + gameState.settings.buildTime * 1000;
     broadcastState();
   } else if (gameState.phase === 'BUILDING') {
-    // Shuffle presentation order
     const ids = Object.keys(gameState.players);
     for (let i = ids.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -1884,7 +2447,7 @@ function hostAdvancePhase() {
     gameState.currentPresIdx = 0;
     gameState.currentSlideIdx = 0;
     gameState.phase = 'PRESENTING';
-    gameState.phaseEndTime = 0;
+    gameState.phaseEndTime = Date.now() + (gameState.settings.pitchTime || 60) * 1000;
     broadcastState();
   }
 }
@@ -1904,10 +2467,12 @@ function hostTriggerReveal() {
 
 function hostAdvanceAfterReveal() {
   if (!isHost) return;
+  playSlideWhoosh();
   if (gameState.currentPresIdx + 1 < gameState.presentOrder.length) {
     gameState.currentPresIdx++;
     gameState.currentSlideIdx = 0;
     gameState.phase = 'PRESENTING';
+    gameState.phaseEndTime = Date.now() + (gameState.settings.pitchTime || 60) * 1000;
     broadcastState();
   } else {
     gameState.phase = 'PODIUM';
@@ -1917,6 +2482,7 @@ function hostAdvanceAfterReveal() {
 
 function hostResetToLobby() {
   if (!isHost) return;
+  playSnappyPop(600);
   gameState.phase = 'LOBBY';
   gameState.phaseEndTime = 0;
   broadcastState();
@@ -1926,7 +2492,7 @@ function toggleReadyState() {
   const me = gameState.players[myId];
   if (!me) return;
   const nextReady = !me.ready;
-  playPop(nextReady ? 680 : 400);
+  playSnappyPop(nextReady ? 700 : 420);
   sendToHost({ type: 'PLAYER_READY', playerId: myId, ready: nextReady });
 }
 
@@ -1934,9 +2500,9 @@ function markDeckFinished() {
   const me = gameState.players[myId];
   if (!me) return;
   const nextReady = !me.ready;
-  playPop(nextReady ? 720 : 420);
+  playSnappyPop(nextReady ? 740 : 420);
   const btn = document.getElementById('btn-finish-deck');
-  btn.textContent = nextReady ? '⏳ Waiting...' : '✅ Done!';
+  btn.textContent = nextReady ? '⏳ Waiting...' : '✅ Ready!';
   btn.style.background = nextReady ? 'var(--yellow)' : 'var(--lime)';
   sendToHost({
     type: 'PLAYER_READY',
@@ -1948,17 +2514,18 @@ function markDeckFinished() {
 }
 
 function applyGameState(state) {
-  // Sync lobby selects for guests
+  document.getElementById('mode-btn-random').classList.toggle('active', state.settings.wikiMode === 'random');
+  document.getElementById('mode-btn-choose').classList.toggle('active', state.settings.wikiMode === 'choose');
   if (!isHost) {
     document.getElementById('setting-lang').value = state.settings.lang;
     document.getElementById('setting-read-time').value = state.settings.readTime;
     document.getElementById('setting-build-time').value = state.settings.buildTime;
+    document.getElementById('setting-pitch-time').value = state.settings.pitchTime || 60;
   }
 
-  // Update Top HUD
   const phaseNames = {
     LOBBY: 'Lobby',
-    READING: '📖 Reading Phase',
+    READING: state.settings.wikiMode === 'choose' ? '🔎 Pick & Read Wiki' : '📖 Reading Phase',
     BUILDING: '🎨 Slide Studio',
     PRESENTING: '🎤 Live Pitch',
     VOTING: '🗳️ Voting',
@@ -1967,9 +2534,8 @@ function applyGameState(state) {
   };
   document.getElementById('hud-phase-label').textContent = phaseNames[state.phase] || state.phase;
 
-  // Timer HUD visibility
   const timerBox = document.getElementById('hud-timer-box');
-  if (state.phase === 'READING' || state.phase === 'BUILDING') {
+  if (state.phase === 'READING' || state.phase === 'BUILDING' || (state.phase === 'PRESENTING' && state.phaseEndTime > 0)) {
     timerBox.style.display = 'flex';
     document.getElementById('hud-host-skip').style.display = isHost ? 'inline-flex' : 'none';
     startLocalCountdown(state.phaseEndTime);
@@ -1978,7 +2544,6 @@ function applyGameState(state) {
     if (localTimerInterval) clearInterval(localTimerInterval);
   }
 
-  // Show active screen
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const targetScreen = document.getElementById('screen-' + state.phase.toLowerCase());
   if (targetScreen) targetScreen.classList.add('active');
@@ -1992,9 +2557,19 @@ function applyGameState(state) {
 
   if (state.phase === 'READING') {
     stopYoutubeMusic();
+    const isChooseMode = state.settings.wikiMode === 'choose';
+    document.getElementById('choose-wiki-panel').style.display = isChooseMode ? 'block' : 'none';
+    document.getElementById('reroll-wiki-btn').style.display = isChooseMode ? 'none' : 'inline-flex';
+    document.getElementById('read-phase-tag').textContent = isChooseMode ? 'PHASE 1: CHOOSE YOUR WIKI PAGE' : 'PHASE 1: RANDOM WIKI ROULETTE';
+    document.getElementById('read-phase-heading').textContent = isChooseMode
+      ? 'Search & pick any Wikipedia page to present!'
+      : 'Study your secret Wikipedia article!';
+
     if (lastRenderedPhase !== 'READING') {
       document.getElementById('reroll-wiki-btn').disabled = false;
       document.getElementById('reroll-wiki-btn').textContent = '🎲 Reroll Page (1 left)';
+      document.getElementById('wiki-topic-search-input').value = '';
+      document.getElementById('wiki-search-results').innerHTML = '';
       assignMyArticle(false);
     }
     if (me && me.article) {
@@ -2014,9 +2589,13 @@ function applyGameState(state) {
 
   if (state.phase === 'BUILDING') {
     if (lastRenderedPhase !== 'BUILDING') {
-      // Seed slide 1 with their Wikipedia title & thumbnail if deck is fresh
-      if (me && me.article && myDeck.slides[0].elements.length <= 1) {
-        myDeck.slides[0].elements[0].text = me.article.title;
+      myDeck = createDefaultDeck();
+      activeSlideIdx = 0;
+      selectedElId = null;
+      if (me && me.article) {
+        const titleEl = myDeck.slides[0].elements[0];
+        titleEl.text = me.article.title;
+        fitTextBoxToContent(titleEl);
         if (me.article.thumbnail) {
           myDeck.slides[0].elements.push({
             id: 'el_' + Date.now(),
@@ -2026,9 +2605,10 @@ function applyGameState(state) {
           });
         }
       }
-      document.getElementById('btn-finish-deck').textContent = '✅ Done!';
+      document.getElementById('btn-finish-deck').textContent = '✅ Ready!';
       document.getElementById('btn-finish-deck').style.background = 'var(--lime)';
       renderSlideEditor();
+      autosaveDeckToHost();
     }
     if (me && me.article) {
       document.getElementById('build-wiki-title').textContent = me.article.title;
@@ -2036,13 +2616,12 @@ function applyGameState(state) {
       if (buildBody.dataset.loadedTitle !== me.article.title) {
         buildBody.innerHTML = me.article.html;
         buildBody.dataset.loadedTitle = me.article.title;
-        attachWikiDragHandlers(buildBody);
+        attachTactileWikiPullHandlers(buildBody);
       }
     }
   }
 
   if (state.phase === 'PRESENTING') {
-    // Ensure final deck is synced before presenting
     if (lastRenderedPhase === 'BUILDING') {
       sendToHost({ type: 'SYNC_DECK', playerId: myId, deck: myDeck, music: myMusic });
     }
@@ -2083,12 +2662,15 @@ function startLocalCountdown(endTime) {
     if (rem === 0) {
       clearInterval(localTimerInterval);
       if (isHost) {
-        // Sync local deck first if building
         if (gameState.phase === 'BUILDING' && gameState.players[myId]) {
           gameState.players[myId].deck = myDeck;
           gameState.players[myId].music = myMusic;
         }
-        hostAdvancePhase();
+        if (gameState.phase === 'PRESENTING') {
+          presenterFinishPitch();
+        } else {
+          hostAdvancePhase();
+        }
       } else if (gameState.phase === 'BUILDING') {
         sendToHost({ type: 'SYNC_DECK', playerId: myId, deck: myDeck, music: myMusic });
       }
@@ -2109,7 +2691,7 @@ function renderLobbyPlayers() {
     div.innerHTML = `
       <div class="player-avatar-circle" style="background:${p.color}">${p.avatar}</div>
       <div style="overflow:hidden;">
-        <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
+        <div style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
         <span class="badge-tag" style="background:${p.isHost ? 'var(--yellow)' : 'var(--muted)'};">${p.isHost ? '👑 HOST' : 'PLAYER'}</span>
       </div>
     `;
@@ -2118,24 +2700,36 @@ function renderLobbyPlayers() {
 }
 
 /* ============================================================================
-   6. DRAG & DROP FROM EMBEDDED WIKIPEDIA TO SLIDES
+   7. TACTILE RUBBER-BAND RESISTANCE DRAG FROM EMBEDDED WIKIPEDIA
    ============================================================================ */
-function attachWikiDragHandlers(container) {
+let tactileDrag = null;
+const SNAP_THRESHOLD_PX = 58;
+
+function attachTactileWikiPullHandlers(container) {
   container.querySelectorAll('img').forEach(img => {
-    img.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/wiki-image', img.src);
-    });
-    // Also add quick click-to-add button on double click
-    img.title = 'Drag onto slide (or double-click to add)';
-    img.addEventListener('dblclick', () => {
+    img.title = 'Pull out with resistance to snap onto your slide! (or double-click)';
+    img.addEventListener('dblclick', (e) => {
       addImageElement(img.src);
-      playPop(640);
+      playDropThud();
+      spawnSparkles(e.clientX, e.clientY);
+    });
+
+    img.addEventListener('mousedown', (e) => {
+      if (e.button !== 0 || gameState.phase !== 'BUILDING') return;
+      e.preventDefault();
+      beginTactilePull({
+        kind: 'image',
+        src: img.src,
+        originX: e.clientX,
+        originY: e.clientY,
+        sourceImgEl: img
+      });
     });
   });
 }
 
-// Floating "Drop Text onto Slide" popover when selecting text in Wikipedia
 document.addEventListener('mouseup', () => {
+  if (tactileDrag) return;
   if (gameState.phase !== 'BUILDING') return;
   const sel = window.getSelection();
   const text = sel ? sel.toString().trim() : '';
@@ -2144,9 +2738,9 @@ document.addEventListener('mouseup', () => {
     const rect = sel.getRangeAt(0).getBoundingClientRect();
     const wikiContainer = document.getElementById('build-wiki-body');
     if (wikiContainer && wikiContainer.contains(sel.anchorNode)) {
-      pop.style.display = 'block';
-      pop.style.left = Math.max(16, Math.min(window.innerWidth - 220, rect.left)) + 'px';
-      pop.style.top = Math.max(68, rect.top - 42) + 'px';
+      pop.style.display = 'inline-flex';
+      pop.style.left = Math.max(16, Math.min(window.innerWidth - 235, rect.left)) + 'px';
+      pop.style.top = Math.max(68, rect.top - 44) + 'px';
       pop.dataset.selectedText = text.slice(0, 350);
       return;
     }
@@ -2154,17 +2748,153 @@ document.addEventListener('mouseup', () => {
   pop.style.display = 'none';
 });
 
-function addSelectedWikiTextToSlide(e) {
+function startSelectionTactileDrag(e) {
   e.preventDefault();
+  e.stopPropagation();
   const pop = document.getElementById('wiki-selection-pop');
   const txt = pop.dataset.selectedText;
-  if (txt) {
-    addTextBox(txt);
-    playPop(660);
-  }
+  if (!txt) return;
   pop.style.display = 'none';
   window.getSelection().removeAllRanges();
+
+  beginTactilePull({
+    kind: 'text',
+    text: txt,
+    originX: e.clientX,
+    originY: e.clientY,
+    isClickCandidate: true
+  });
 }
+
+function beginTactilePull(cfg) {
+  const ghost = document.getElementById('tactile-drag-ghost');
+  const preview = document.getElementById('tactile-ghost-preview');
+  const status = document.getElementById('tactile-ghost-status');
+  const tetherSvg = document.getElementById('tactile-tether-svg');
+  const anchorDot = document.getElementById('tactile-anchor-dot');
+
+  if (cfg.sourceImgEl) cfg.sourceImgEl.classList.add('being-pulled');
+
+  if (cfg.kind === 'image') {
+    preview.innerHTML = `<img src="${cfg.src}" style="width:120px; height:84px; object-fit:contain; border-radius:10px; display:block;"/>`;
+  } else {
+    preview.textContent = `"${cfg.text.slice(0, 75)}${cfg.text.length > 75 ? '...' : ''}"`;
+  }
+
+  status.textContent = '🧲 Pull to detach...';
+  status.style.color = 'var(--violet)';
+  ghost.classList.remove('snapped');
+  ghost.style.display = 'block';
+  tetherSvg.style.display = 'block';
+  anchorDot.setAttribute('cx', cfg.originX);
+  anchorDot.setAttribute('cy', cfg.originY);
+
+  tactileDrag = {
+    ...cfg,
+    snapped: false,
+    movedDist: 0
+  };
+  updateTactilePullVisuals(cfg.originX, cfg.originY);
+}
+
+function updateTactilePullVisuals(clientX, clientY) {
+  if (!tactileDrag) return;
+  const dx = clientX - tactileDrag.originX;
+  const dy = clientY - tactileDrag.originY;
+  const dist = Math.hypot(dx, dy);
+  tactileDrag.movedDist = dist;
+
+  const ghost = document.getElementById('tactile-drag-ghost');
+  const status = document.getElementById('tactile-ghost-status');
+  const tetherSvg = document.getElementById('tactile-tether-svg');
+  const tetherPath = document.getElementById('tactile-tether-path');
+
+  if (!tactileDrag.snapped && dist >= SNAP_THRESHOLD_PX) {
+    tactileDrag.snapped = true;
+    playElasticSnap();
+    spawnSparkles(clientX, clientY, ['#C8FF2E', '#FF5454', '#FFE600']);
+    ghost.classList.add('snapped');
+    status.textContent = '✨ DROP ON SLIDE!';
+    status.style.color = '#18181B';
+    tetherSvg.style.display = 'none';
+  }
+
+  let gx, gy, scale, rot;
+  if (!tactileDrag.snapped) {
+    // 0.36x elastic resistance for the first 58px
+    const resistance = 0.36;
+    gx = tactileDrag.originX + dx * resistance;
+    gy = tactileDrag.originY + dy * resistance;
+    const tension = dist / SNAP_THRESHOLD_PX;
+    scale = 0.92 + tension * 0.14;
+    rot = dx * 0.08;
+    playElasticStretch(tension);
+
+    const midX = (tactileDrag.originX + gx) / 2;
+    const midY = (tactileDrag.originY + gy) / 2 + 18;
+    tetherPath.setAttribute('d', `M ${tactileDrag.originX} ${tactileDrag.originY} Q ${midX} ${midY} ${gx} ${gy}`);
+    tetherPath.setAttribute('stroke', tension > 0.7 ? '#FF5454' : '#8F6BFF');
+  } else {
+    gx = clientX;
+    gy = clientY;
+    scale = 1.04;
+    rot = -2.5;
+  }
+
+  ghost.style.left = (gx - 65) + 'px';
+  ghost.style.top = (gy - 35) + 'px';
+  ghost.style.transform = `scale(${scale}) rotate(${rot}deg)`;
+
+  const stage = document.getElementById('editor-stage');
+  const sr = stage.getBoundingClientRect();
+  const isOverStage = (clientX >= sr.left && clientX <= sr.right && clientY >= sr.top && clientY <= sr.bottom);
+  stage.classList.toggle('drag-over', isOverStage);
+}
+
+window.addEventListener('mousemove', (e) => {
+  if (tactileDrag) {
+    updateTactilePullVisuals(e.clientX, e.clientY);
+  }
+});
+
+window.addEventListener('mouseup', (e) => {
+  if (!tactileDrag) return;
+  const drag = tactileDrag;
+  tactileDrag = null;
+
+  if (drag.sourceImgEl) drag.sourceImgEl.classList.remove('being-pulled');
+  document.getElementById('tactile-drag-ghost').style.display = 'none';
+  document.getElementById('tactile-tether-svg').style.display = 'none';
+
+  const stage = document.getElementById('editor-stage');
+  stage.classList.remove('drag-over');
+  const sr = stage.getBoundingClientRect();
+  const isOverStage = (e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom);
+
+  if (drag.isClickCandidate && drag.movedDist < 8) {
+    addTextBox(drag.text);
+    playDropThud();
+    spawnSparkles(e.clientX, e.clientY);
+    return;
+  }
+
+  if (isOverStage) {
+    const scaleX = 960 / sr.width;
+    const scaleY = 540 / sr.height;
+    const dropX = Math.max(20, Math.min(720, (e.clientX - sr.left) * scaleX - 90));
+    const dropY = Math.max(20, Math.min(410, (e.clientY - sr.top) * scaleY - 35));
+
+    if (drag.kind === 'image') {
+      addImageElement(drag.src, dropX, dropY);
+    } else {
+      addTextBox(drag.text, dropX, dropY);
+    }
+    playDropThud();
+    spawnSparkles(e.clientX, e.clientY);
+  } else {
+    playSnappyPop(310, 0.06);
+  }
+});
 
 function handleStageDragOver(e) {
   e.preventDefault();
@@ -2185,48 +2915,46 @@ function handleStageDrop(e) {
   const dropX = Math.max(20, Math.min(700, (e.clientX - rect.left) * scaleX - 80));
   const dropY = Math.max(20, Math.min(400, (e.clientY - rect.top) * scaleY - 30));
 
-  const wikiImg = e.dataTransfer.getData('text/wiki-image');
   const uriList = e.dataTransfer.getData('text/uri-list');
   const plainText = e.dataTransfer.getData('text/plain');
 
-  if (wikiImg) {
-    addImageElement(wikiImg, dropX, dropY);
-    playPop(700);
-  } else if (uriList && /\.(png|jpe?g|gif|webp|svg)/i.test(uriList)) {
+  if (uriList && /\.(png|jpe?g|gif|webp|svg)/i.test(uriList)) {
     addImageElement(uriList, dropX, dropY);
-    playPop(700);
+    playDropThud();
   } else if (plainText && plainText.trim()) {
     addTextBox(plainText.trim().slice(0, 350), dropX, dropY);
-    playPop(650);
+    playDropThud();
   }
 }
 
 /* ============================================================================
-   7. BUMP POWERPOINT STUDIO (Slides, Text, Shapes, Drawing, Stickers, GIFs)
+   8. BUMP POWERPOINT STUDIO (7 Text Box Styles, Auto-Fit, Proportional Resize)
    ============================================================================ */
-let myDeck = createDefaultDeck('My Presentation');
-let myMusic = null; // { id, start, title }
+let myDeck = createDefaultDeck();
+let myMusic = null;
 let activeSlideIdx = 0;
 let selectedElId = null;
 let isDrawingMode = false;
 
-function createDefaultDeck(ownerName) {
+function createDefaultDeck() {
+  const initialEl = {
+    id: 'el_intro_1',
+    type: 'text',
+    boxStyle: 'bump',
+    text: 'Why This Wiki Page Is Wild',
+    x: 60, y: 50, w: 460, h: 72, rot: -1,
+    font: 'Fredoka', fontSize: 36,
+    bold: true, italic: false, align: 'center',
+    color: '#18181B', fill: '#C8FF2E', borderColor: '#18181B'
+  };
   return {
     slides: [
       {
         id: 's_' + Math.random().toString(36).slice(2, 8),
-        bgColor: '#FFFDF7',
+        bgColor: '#FAF7EE',
         bgPattern: 'bg-dots',
-        drawing: null, // dataURL of ink layer
-        elements: [
-          {
-            id: 'el_intro_1',
-            type: 'text',
-            text: 'Why This Wiki Page Is Wild',
-            x: 60, y: 50, w: 440, h: 140, rot: -1,
-            font: 'Fredoka', fontSize: 40, color: '#141416', fill: '#C6FF33'
-          }
-        ]
+        drawing: null,
+        elements: [initialEl]
       }
     ]
   };
@@ -2248,24 +2976,87 @@ function autosaveDeckToHost() {
   }
 }
 
+/* ---------- AUTO-HUG TEXT BOX DIMENSIONS TO TEXT CONTENT ---------- */
+let textMeasurerEl = null;
+function fitTextBoxToContent(el, preserveWidth = false) {
+  if (!el || el.type !== 'text') return;
+  if (!textMeasurerEl) {
+    textMeasurerEl = document.createElement('div');
+    textMeasurerEl.style.cssText = 'position:fixed; left:-9999px; top:-9999px; visibility:hidden; word-break:break-word; line-height:1.22; box-sizing:border-box;';
+    document.body.appendChild(textMeasurerEl);
+  }
+  const fSize = el.fontSize || 28;
+  const padX = (el.boxStyle === 'pill') ? 46 : 32;
+  const padY = 22;
+
+  textMeasurerEl.style.fontFamily = `'${el.font || 'Fredoka'}', sans-serif`;
+  textMeasurerEl.style.fontSize = fSize + 'px';
+  textMeasurerEl.style.fontWeight = (el.bold !== false) ? '700' : '500';
+  textMeasurerEl.style.fontStyle = el.italic ? 'italic' : 'normal';
+  textMeasurerEl.style.padding = `${padY / 2}px ${padX / 2}px`;
+
+  if (preserveWidth && el.w) {
+    textMeasurerEl.style.width = el.w + 'px';
+    textMeasurerEl.style.whiteSpace = 'normal';
+  } else {
+    textMeasurerEl.style.width = 'auto';
+    textMeasurerEl.style.maxWidth = '560px';
+    textMeasurerEl.style.whiteSpace = 'pre-wrap';
+  }
+
+  textMeasurerEl.textContent = el.text || 'Text';
+  const rect = textMeasurerEl.getBoundingClientRect();
+  if (!preserveWidth) {
+    el.w = Math.max(96, Math.min(860, Math.ceil(rect.width) + 8));
+  }
+  el.h = Math.max(46, Math.min(480, Math.ceil(rect.height) + 6));
+}
+
+function fitSelectedTextBoxNow() {
+  const el = getCurrentSlide().elements.find(x => x.id === selectedElId);
+  if (el && el.type === 'text') {
+    fitTextBoxToContent(el, false);
+    playSnappyPop(660);
+    renderSlideEditor();
+    autosaveDeckToHost();
+  }
+}
+
 function addNewSlide() {
-  playPop(580);
+  playSlideWhoosh();
+  const titleEl = {
+    id: 'el_' + Date.now(),
+    type: 'text',
+    boxStyle: 'pill',
+    text: 'Slide ' + (myDeck.slides.length + 1),
+    x: 60, y: 40, w: 220, h: 64, rot: 0,
+    font: 'Fredoka', fontSize: 32,
+    bold: true, italic: false, align: 'center',
+    color: '#18181B', fill: '#3BE8E0', borderColor: '#18181B'
+  };
+  fitTextBoxToContent(titleEl);
   myDeck.slides.push({
     id: 's_' + Math.random().toString(36).slice(2, 8),
     bgColor: '#FFFFFF',
     bgPattern: '',
     drawing: null,
-    elements: [
-      {
-        id: 'el_' + Date.now(),
-        type: 'text',
-        text: 'Slide ' + (myDeck.slides.length + 1) + ' Title',
-        x: 60, y: 40, w: 460, h: 75, rot: 0,
-        font: 'Fredoka', fontSize: 34, color: '#141416', fill: 'transparent'
-      }
-    ]
+    elements: [titleEl]
   });
   activeSlideIdx = myDeck.slides.length - 1;
+  selectedElId = null;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function duplicateCurrentSlide() {
+  playSnappyPop(620);
+  const copy = JSON.parse(JSON.stringify(getCurrentSlide()));
+  copy.id = 's_' + Math.random().toString(36).slice(2, 8);
+  copy.elements.forEach(el => {
+    el.id = 'el_' + Date.now() + Math.random().toString(36).slice(2, 6);
+  });
+  myDeck.slides.splice(activeSlideIdx + 1, 0, copy);
+  activeSlideIdx++;
   selectedElId = null;
   renderSlideEditor();
   autosaveDeckToHost();
@@ -2274,7 +3065,7 @@ function addNewSlide() {
 function deleteSlide(idx, e) {
   e.stopPropagation();
   if (myDeck.slides.length <= 1) return;
-  playPop(340);
+  playSnappyPop(340);
   myDeck.slides.splice(idx, 1);
   activeSlideIdx = Math.max(0, activeSlideIdx - 1);
   selectedElId = null;
@@ -2289,6 +3080,7 @@ function updateSlideBgColor(val) {
 }
 
 function updateSlideBgPattern(val) {
+  playSnappyPop(520);
   getCurrentSlide().bgPattern = val;
   renderSlideEditor();
   autosaveDeckToHost();
@@ -2297,36 +3089,47 @@ function updateSlideBgPattern(val) {
 function addTextBox(initialText = 'Double-click to edit!', x = 140, y = 180) {
   const slide = getCurrentSlide();
   const id = 'el_' + Date.now() + Math.random().toString(36).slice(2, 5);
-  slide.elements.push({
+  const el = {
     id,
     type: 'text',
+    boxStyle: 'bump',
     text: initialText,
     x, y,
-    w: initialText.length > 80 ? 440 : 320,
-    h: initialText.length > 80 ? 150 : 85,
+    w: 280,
+    h: 70,
     rot: 0,
     font: 'Fredoka',
-    fontSize: initialText.length > 80 ? 20 : 28,
-    color: '#141416',
-    fill: '#FFE600'
-  });
+    fontSize: initialText.length > 90 ? 20 : 28,
+    bold: true,
+    italic: false,
+    align: 'center',
+    color: '#18181B',
+    fill: '#FFE600',
+    borderColor: '#18181B',
+    justAdded: true
+  };
+  fitTextBoxToContent(el, false);
+  slide.elements.push(el);
   selectedElId = id;
+  playDropThud();
   renderSlideEditor();
   autosaveDeckToHost();
 }
 
 function addShape(shapeType) {
-  playPop(540);
+  playDropThud();
   const slide = getCurrentSlide();
   const id = 'el_' + Date.now();
-  const colors = ['#C6FF33', '#9D7BFF', '#FF5C5C', '#4DEEEA', '#FFE600', '#FF85E4'];
+  const colors = ['#C8FF2E', '#8F6BFF', '#FF5454', '#3BE8E0', '#FFE600', '#FF7EE2'];
   const fill = colors[Math.floor(Math.random() * colors.length)];
   slide.elements.push({
     id,
     type: 'shape',
     shape: shapeType,
     x: 340, y: 170, w: 200, h: 160, rot: 0,
-    fill
+    fill,
+    borderColor: '#18181B',
+    justAdded: true
   });
   selectedElId = id;
   renderSlideEditor();
@@ -2344,7 +3147,8 @@ function addImageElement(src, x = 280, y = 130, isSticker = false, stickerText =
     x, y,
     w: isSticker ? 140 : 280,
     h: isSticker ? 140 : 210,
-    rot: isSticker ? -5 : 0
+    rot: isSticker ? -5 : 0,
+    justAdded: true
   });
   selectedElId = id;
   renderSlideEditor();
@@ -2355,11 +3159,33 @@ function updateSelectedElStyle(prop, val) {
   const slide = getCurrentSlide();
   const el = slide.elements.find(x => x.id === selectedElId);
   if (!el) return;
-  if (prop === 'fontSize') {
-    el.fontSize = Math.max(12, Math.min(96, (el.fontSize || 26) + val));
-  } else {
-    el[prop] = val;
+  playSnappyPop(580);
+  el[prop] = val;
+  if (el.type === 'text' && (prop === 'font' || prop === 'boxStyle')) {
+    fitTextBoxToContent(el, false);
   }
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function toggleSelectedTextFormat(key) {
+  const el = getCurrentSlide().elements.find(x => x.id === selectedElId);
+  if (!el || el.type !== 'text') return;
+  playSnappyPop(600);
+  if (key === 'bold') el.bold = (el.bold === false) ? true : false;
+  if (key === 'italic') el.italic = !el.italic;
+  fitTextBoxToContent(el, false);
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function cycleSelectedTextAlign() {
+  const el = getCurrentSlide().elements.find(x => x.id === selectedElId);
+  if (!el || el.type !== 'text') return;
+  playSnappyPop(600);
+  const order = ['center', 'left', 'right'];
+  const idx = order.indexOf(el.align || 'center');
+  el.align = order[(idx + 1) % order.length];
   renderSlideEditor();
   autosaveDeckToHost();
 }
@@ -2368,6 +3194,7 @@ function bringSelectedForward() {
   const slide = getCurrentSlide();
   const idx = slide.elements.findIndex(x => x.id === selectedElId);
   if (idx >= 0 && idx < slide.elements.length - 1) {
+    playSnappyPop(620);
     const [item] = slide.elements.splice(idx, 1);
     slide.elements.push(item);
     renderSlideEditor();
@@ -2379,7 +3206,7 @@ function deleteSelectedElement() {
   const slide = getCurrentSlide();
   const idx = slide.elements.findIndex(x => x.id === selectedElId);
   if (idx >= 0) {
-    playPop(320);
+    playSnappyPop(310);
     slide.elements.splice(idx, 1);
     selectedElId = null;
     renderSlideEditor();
@@ -2410,21 +3237,33 @@ function renderSlideEditor() {
   document.getElementById('slide-bg-color').value = slide.bgColor || '#ffffff';
   document.getElementById('slide-bg-pattern').value = slide.bgPattern || '';
 
-  // Contextual toolbar visibility
   const elControls = document.getElementById('el-controls');
   const selObj = slide.elements.find(x => x.id === selectedElId);
   elControls.style.display = selObj ? 'flex' : 'none';
   if (selObj) {
-    if (selObj.font) document.getElementById('el-font').value = selObj.font;
-    if (selObj.color) document.getElementById('el-color').value = selObj.color;
+    const isText = selObj.type === 'text';
+    document.getElementById('el-box-style').style.display = isText ? 'inline-block' : 'none';
+    document.getElementById('el-font').style.display = isText ? 'inline-block' : 'none';
+    document.getElementById('el-bold-btn').style.display = isText ? 'inline-flex' : 'none';
+    document.getElementById('el-italic-btn').style.display = isText ? 'inline-flex' : 'none';
+    document.getElementById('el-align-btn').style.display = isText ? 'inline-flex' : 'none';
+    document.getElementById('el-color').style.display = isText ? 'inline-block' : 'none';
+    document.getElementById('el-fit-btn').style.display = isText ? 'inline-flex' : 'none';
+
+    if (isText) {
+      document.getElementById('el-box-style').value = selObj.boxStyle || 'bump';
+      document.getElementById('el-font').value = selObj.font || 'Fredoka';
+      document.getElementById('el-bold-btn').classList.toggle('active', selObj.bold !== false);
+      document.getElementById('el-italic-btn').classList.toggle('active', !!selObj.italic);
+      document.getElementById('el-color').value = selObj.color || '#18181B';
+    }
     if (selObj.fill && selObj.fill !== 'transparent') document.getElementById('el-fill').value = selObj.fill;
+    document.getElementById('el-border-col').value = selObj.borderColor || '#18181B';
   }
 
-  // Render Elements into 960x540 logical space scaled to stage
   const layer = document.getElementById('editor-elements-layer');
   renderElementsIntoLayer(layer, slide.elements, true);
 
-  // Render Drawing Canvas
   const drawCanvas = document.getElementById('draw-layer');
   const ctx = drawCanvas.getContext('2d');
   ctx.clearRect(0, 0, 960, 540);
@@ -2434,7 +3273,6 @@ function renderSlideEditor() {
     img.src = slide.drawing;
   }
 
-  // Render Filmstrip
   const strip = document.getElementById('slide-strip');
   strip.innerHTML = '';
   myDeck.slides.forEach((s, i) => {
@@ -2445,11 +3283,12 @@ function renderSlideEditor() {
     if (myDeck.slides.length > 1) {
       const del = document.createElement('button');
       del.textContent = '×';
-      del.style.cssText = 'position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:2px solid #141416; background:var(--coral); color:#fff; font-weight:800; cursor:pointer; line-height:1;';
+      del.style.cssText = 'position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:2px solid #18181B; background:var(--coral); color:#fff; font-weight:800; cursor:pointer; line-height:1;';
       del.onclick = (e) => deleteSlide(i, e);
       thumb.appendChild(del);
     }
     thumb.onclick = () => {
+      playSlideWhoosh();
       activeSlideIdx = i;
       selectedElId = null;
       renderSlideEditor();
@@ -2462,14 +3301,21 @@ function renderSlideEditor() {
   addBtn.textContent = '+ Slide';
   addBtn.onclick = addNewSlide;
   strip.appendChild(addBtn);
+
+  const dupBtn = document.createElement('button');
+  dupBtn.className = 'bump-btn sm white';
+  dupBtn.textContent = '📋 Copy Slide';
+  dupBtn.onclick = duplicateCurrentSlide;
+  strip.appendChild(dupBtn);
 }
 
 function renderElementsIntoLayer(container, elements, interactive) {
   container.innerHTML = '';
   elements.forEach(el => {
     const node = document.createElement('div');
-    node.className = 'slide-el' + (interactive && el.id === selectedElId ? ' selected' : '');
-    // Percentage-based positioning from 960x540 base
+    node.className = 'slide-el' + (interactive && el.id === selectedElId ? ' selected' : '') + (el.justAdded ? ' just-dropped' : '');
+    if (el.justAdded) delete el.justAdded;
+
     node.style.left = (el.x / 960 * 100) + '%';
     node.style.top = (el.y / 540 * 100) + '%';
     node.style.width = (el.w / 960 * 100) + '%';
@@ -2478,16 +3324,25 @@ function renderElementsIntoLayer(container, elements, interactive) {
 
     if (el.type === 'text') {
       const box = document.createElement('div');
-      box.className = 'el-text-content';
+      const styleClass = 'tbox-' + (el.boxStyle || 'bump');
+      box.className = 'el-text-content ' + styleClass;
       box.style.fontFamily = `'${el.font || 'Fredoka'}', sans-serif`;
-      box.style.fontSize = `clamp(11px, ${(el.fontSize || 28) / 9.6}vw, ${(el.fontSize || 28)}px)`;
-      box.style.color = el.color || '#141416';
-      box.style.fontWeight = '700';
-      if (el.fill && el.fill !== 'transparent') {
-        box.style.background = el.fill;
-        box.style.border = '2.5px solid #141416';
-        box.style.borderRadius = '14px';
-        box.style.boxShadow = '3px 3px 0 #141416';
+      const stageWidth = container.getBoundingClientRect().width || 760;
+      const scaleRatio = stageWidth / 960;
+      box.style.fontSize = Math.max(10, (el.fontSize || 28) * scaleRatio) + 'px';
+      box.style.color = (el.boxStyle === 'neon' && (!el.color || el.color === '#18181B')) ? '#FFFFFF' : (el.color || '#18181B');
+      box.style.fontWeight = (el.bold !== false) ? '700' : '500';
+      box.style.fontStyle = el.italic ? 'italic' : 'normal';
+      const alignVal = el.align || 'center';
+      box.style.textAlign = alignVal;
+      box.style.justifyContent = alignVal === 'left' ? 'flex-start' : alignVal === 'right' ? 'flex-end' : 'center';
+
+      const fillCol = el.fill || '#FFE600';
+      const borderCol = el.borderColor || '#18181B';
+      box.style.setProperty('--box-accent', fillCol);
+      box.style.setProperty('--box-border', borderCol);
+      if (el.boxStyle !== 'neon' && el.boxStyle !== 'outline' && el.boxStyle !== 'none') {
+        box.style.backgroundColor = fillCol;
       }
       box.textContent = el.text || '';
 
@@ -2496,16 +3351,30 @@ function renderElementsIntoLayer(container, elements, interactive) {
           e.stopPropagation();
           box.contentEditable = 'true';
           box.focus();
+          const range = document.createRange();
+          range.selectNodeContents(box);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        };
+        // Live auto-hug box dimensions as user types!
+        box.oninput = () => {
+          el.text = box.textContent;
+          fitTextBoxToContent(el, false);
+          node.style.width = (el.w / 960 * 100) + '%';
+          node.style.height = (el.h / 540 * 100) + '%';
         };
         box.onblur = () => {
           box.contentEditable = 'false';
-          el.text = box.textContent;
+          el.text = box.textContent || 'Text';
+          fitTextBoxToContent(el, false);
+          renderSlideEditor();
           autosaveDeckToHost();
         };
       }
       node.appendChild(box);
     } else if (el.type === 'shape') {
-      node.innerHTML = getShapeSVG(el.shape, el.fill || '#C6FF33');
+      node.innerHTML = getShapeSVG(el.shape, el.fill || '#C8FF2E', el.borderColor || '#18181B');
     } else if (el.type === 'image') {
       const img = document.createElement('img');
       img.src = el.src;
@@ -2516,13 +3385,14 @@ function renderElementsIntoLayer(container, elements, interactive) {
       if (el.src) {
         const sDiv = document.createElement('div');
         sDiv.className = 'sticker-diecut';
-        sDiv.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:4.2rem; pointer-events:none;';
+        const stageWidth = container.getBoundingClientRect().width || 760;
+        sDiv.style.cssText = `width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:${Math.round(el.h * 0.72 * (stageWidth / 960))}px; pointer-events:none;`;
         sDiv.textContent = el.src;
         node.appendChild(sDiv);
       } else {
         const badge = document.createElement('div');
         badge.className = 'sticker-diecut';
-        badge.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#FFE600; border:3px solid #141416; border-radius:999px; font-family:Bangers,cursive; font-size:1.35rem; letter-spacing:1px; color:#141416; text-align:center; padding:4px; pointer-events:none;';
+        badge.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#FFE600; border:3px solid #18181B; border-radius:999px; font-family:Fredoka,sans-serif; font-weight:700; font-size:1.15rem; color:#18181B; text-align:center; padding:4px; pointer-events:none;';
         badge.textContent = el.stickerText;
         node.appendChild(badge);
       }
@@ -2543,30 +3413,31 @@ function renderElementsIntoLayer(container, elements, interactive) {
   });
 }
 
-function getShapeSVG(shape, fill) {
-  const stroke = '#141416';
+function getShapeSVG(shape, fill, stroke = '#18181B') {
   switch (shape) {
     case 'circle':
       return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><ellipse cx="50" cy="50" rx="46" ry="46" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
-    case 'pill':
-      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><rect x="3" y="3" width="94" height="94" rx="45" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
-    case 'triangle':
-      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,5 95,93 5,93" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
     case 'arrow':
       return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="5,32 58,32 58,12 95,50 58,88 58,68 5,68" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
     case 'star':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,4 63,34 96,38 71,60 78,93 50,76 22,93 29,60 4,38 37,34" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
+    case 'badge':
       return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,3 63,24 88,16 82,41 98,58 76,71 80,96 56,84 36,98 32,73 8,66 23,45 12,21 37,25" fill="${fill}" stroke="${stroke}" stroke-width="3.5" stroke-linejoin="round"/></svg>`;
-    case 'bubble':
+    case 'heart':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><path d="M50,90 C50,90 8,62 8,32 C8,16 21,6 35,6 C43,6 48,11 50,16 C52,11 57,6 65,6 C79,6 92,16 92,32 C92,62 50,90 50,90 Z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
+    case 'speech':
       return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><path d="M12,8 H88 A8,8 0 0 1 96,16 V66 A8,8 0 0 1 88,74 H36 L16,92 V74 H12 A8,8 0 0 1 4,66 V16 A8,8 0 0 1 12,8 Z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
     default:
-      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><rect x="3" y="3" width="94" height="94" rx="10" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><rect x="3" y="3" width="94" height="94" rx="12" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
   }
 }
 
+/* ---------- TRANSFORM HANDLERS (Resizing a Text Box Scales Its Font Size!) ---------- */
 function attachElementTransformHandlers(node, el, resizer, rotator) {
-  node.onmousedown = (e) => {
+  node.onpointerdown = (e) => {
     if (e.target.isContentEditable) return;
     e.stopPropagation();
+    playSnappyPop(520, 0.045);
     selectedElId = el.id;
     renderSlideEditor();
 
@@ -2577,25 +3448,48 @@ function attachElementTransformHandlers(node, el, resizer, rotator) {
     const startX = e.clientX;
     const startY = e.clientY;
     const origX = el.x, origY = el.y, origW = el.w, origH = el.h;
+    const origFontSize = el.fontSize || 28;
+    let lastResizeTick = 0;
 
     const mode = (e.target === resizer) ? 'resize' : (e.target === rotator) ? 'rotate' : 'move';
 
     function onMove(ev) {
       const dx = (ev.clientX - startX) * scaleX;
       const dy = (ev.clientY - startY) * scaleY;
+      const liveNode = document.querySelector('.slide-el.selected');
+
       if (mode === 'move') {
         el.x = origX + dx;
         el.y = origY + dy;
       } else if (mode === 'resize') {
-        el.w = Math.max(48, origW + dx);
-        el.h = Math.max(36, origH + dy);
+        if (el.type === 'text') {
+          // Proportional font scaling: text size dynamically follows the resized box!
+          const ratio = Math.max(0.35, Math.min(4.2, (origW + dx) / Math.max(40, origW)));
+          el.fontSize = Math.max(12, Math.min(115, Math.round(origFontSize * ratio)));
+          el.w = Math.max(72, Math.round(origW * ratio));
+          el.h = Math.max(40, Math.round(origH * ratio));
+          if (liveNode) {
+            const txtBox = liveNode.querySelector('.el-text-content');
+            if (txtBox) {
+              txtBox.style.fontSize = Math.max(10, el.fontSize * (rect.width / 960)) + 'px';
+            }
+          }
+        } else {
+          el.w = Math.max(44, origW + dx);
+          el.h = Math.max(36, origH + dy);
+        }
+        if (Date.now() - lastResizeTick > 75) {
+          lastResizeTick = Date.now();
+          playSnappyPop(350 + Math.min(500, el.w * 0.7), 0.03);
+        }
       } else if (mode === 'rotate') {
         const cx = rect.left + ((el.x + el.w / 2) / 960) * rect.width;
         const cy = rect.top + ((el.y + el.h / 2) / 540) * rect.height;
-        el.rot = Math.round(Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90);
+        let deg = Math.round(Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90);
+        if (Math.abs(deg) < 5) deg = 0;
+        el.rot = deg;
       }
-      // Fast live DOM update
-      const liveNode = document.querySelector('.slide-el.selected');
+
       if (liveNode) {
         liveNode.style.left = (el.x / 960 * 100) + '%';
         liveNode.style.top = (el.y / 540 * 100) + '%';
@@ -2606,23 +3500,27 @@ function attachElementTransformHandlers(node, el, resizer, rotator) {
     }
 
     function onUp() {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      if (mode === 'resize' && el.type === 'text') {
+        fitTextBoxToContent(el, true);
+        renderSlideEditor();
+      }
       autosaveDeckToHost();
     }
 
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
   };
 }
 
-/* ---------- FREEHAND DRAWING TOOL ---------- */
+/* ---------- FREEHAND DRAWING LAYER ---------- */
 function toggleDrawMode() {
   isDrawingMode = !isDrawingMode;
   document.getElementById('btn-draw-mode').classList.toggle('active', isDrawingMode);
   document.getElementById('draw-layer').classList.toggle('drawing-active', isDrawingMode);
   document.getElementById('draw-controls').style.display = isDrawingMode ? 'flex' : 'none';
-  playPop(isDrawingMode ? 620 : 420);
+  playSnappyPop(isDrawingMode ? 640 : 420);
 }
 
 function initDrawCanvas() {
@@ -2638,7 +3536,7 @@ function initDrawCanvas() {
     };
   }
 
-  canvas.addEventListener('mousedown', (e) => {
+  canvas.addEventListener('pointerdown', (e) => {
     if (!isDrawingMode) return;
     painting = true;
     const p = getPos(e);
@@ -2646,18 +3544,18 @@ function initDrawCanvas() {
     ctx.moveTo(p.x, p.y);
   });
 
-  canvas.addEventListener('mousemove', (e) => {
+  canvas.addEventListener('pointermove', (e) => {
     if (!painting || !isDrawingMode) return;
     const p = getPos(e);
     ctx.lineWidth = Number(document.getElementById('draw-size').value) || 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = document.getElementById('draw-color').value || '#FF5C5C';
+    ctx.strokeStyle = document.getElementById('draw-color').value || '#FF5454';
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
   });
 
-  window.addEventListener('mouseup', () => {
+  window.addEventListener('pointerup', () => {
     if (painting) {
       painting = false;
       getCurrentSlide().drawing = canvas.toDataURL('image/png');
@@ -2670,7 +3568,7 @@ function clearSlideDrawing() {
   const canvas = document.getElementById('draw-layer');
   canvas.getContext('2d').clearRect(0, 0, 960, 540);
   getCurrentSlide().drawing = null;
-  playPop(340);
+  playSnappyPop(340);
   autosaveDeckToHost();
 }
 
@@ -2679,20 +3577,21 @@ const BUMP_EMOJI_STICKERS = ['🔥','💀','😭','🧠','🚨','💯','🤡','�
 const BUMP_BADGE_STICKERS = ['FACT CHECK ✅', 'NO CAP 🧢', 'TRUST ME BRO', '100% REAL', 'BREAKING NEWS', 'SOURCE: WIKI', 'WAIT WHAT?!', 'BIG BRAIN 🧠'];
 
 const CURATED_GIFS = [
-  { label: 'Mind Blown', url: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif' },
-  { label: 'Nyan Cat', url: 'https://upload.wikimedia.org/wikipedia/en/e/ed/Nyan_cat_250px_frame.PNG' },
+  { label: 'Rotating Earth', url: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif' },
   { label: 'Party Parrot', url: 'https://upload.wikimedia.org/wikipedia/commons/6/6c/Sirocco_the_kakapo_head_bob.gif' },
   { label: 'Newton Cradle', url: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif' },
   { label: 'DNA Spin', url: 'https://upload.wikimedia.org/wikipedia/commons/8/81/ADN_animation.gif' },
-  { label: 'Loading Wheel', url: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif' }
+  { label: 'Loading Wheel', url: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif' },
+  { label: 'Nyan Cat Frame', url: 'https://upload.wikimedia.org/wikipedia/en/e/ed/Nyan_cat_250px_frame.PNG' }
 ];
 
 function openModal(id) {
-  playPop(580);
+  playSnappyPop(600);
   document.getElementById(id).classList.add('open');
 }
 
 function closeModal(id) {
+  playSnappyPop(440);
   document.getElementById(id).classList.remove('open');
 }
 
@@ -2703,10 +3602,11 @@ function initStickerAndGifLibraries() {
     item.className = 'sticker-item';
     item.style.fontSize = '2.2rem';
     item.textContent = emo;
-    item.onclick = () => {
+    item.onclick = (e) => {
       addImageElement(emo, 360, 180, true, '');
       closeModal('modal-stickers');
-      playPop(680);
+      playDropThud();
+      spawnSparkles(e.clientX, e.clientY);
     };
     sGrid.appendChild(item);
   });
@@ -2714,12 +3614,13 @@ function initStickerAndGifLibraries() {
   BUMP_BADGE_STICKERS.forEach(txt => {
     const item = document.createElement('div');
     item.className = 'sticker-item';
-    item.style.cssText = 'font-family:Bangers,cursive; font-size:1rem; background:var(--yellow); display:flex; align-items:center; justify-content:center;';
+    item.style.cssText = 'font-family:Fredoka,sans-serif; font-size:0.9rem; background:var(--yellow); display:flex; align-items:center; justify-content:center;';
     item.textContent = txt;
-    item.onclick = () => {
+    item.onclick = (e) => {
       addImageElement('', 340, 200, true, txt);
       closeModal('modal-stickers');
-      playPop(680);
+      playDropThud();
+      spawnSparkles(e.clientX, e.clientY);
     };
     sGrid.appendChild(item);
   });
@@ -2734,10 +3635,11 @@ function renderGifGrid(items) {
     const card = document.createElement('div');
     card.className = 'sticker-item';
     card.innerHTML = `<img src="${g.url}" crossorigin="anonymous" style="width:100%; height:90px; object-fit:contain; border-radius:8px;"/><div style="font-size:0.75rem; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(g.label)}</div>`;
-    card.onclick = () => {
+    card.onclick = (e) => {
       addImageElement(g.url, 320, 150, false);
       closeModal('modal-gifs');
-      playPop(700);
+      playDropThud();
+      spawnSparkles(e.clientX, e.clientY);
     };
     gGrid.appendChild(card);
   });
@@ -2749,6 +3651,7 @@ async function searchOrAddGif() {
   if (/^https?:\/\//i.test(q)) {
     addImageElement(q, 320, 150, false);
     closeModal('modal-gifs');
+    playDropThud();
     return;
   }
   const gGrid = document.getElementById('gif-results-grid');
@@ -2780,6 +3683,7 @@ function initYtPresets() {
     btn.style.justifyContent = 'flex-start';
     btn.textContent = tr.title;
     btn.onclick = () => {
+      playSnappyPop(660);
       myMusic = { id: tr.id, start: tr.start, title: tr.title };
       document.getElementById('yt-selected-title').textContent = tr.title;
       playYoutubeMusic(tr.id, tr.start, tr.title);
@@ -2794,9 +3698,10 @@ function applyCustomYoutube() {
   const id = parseYoutubeId(raw);
   const start = Number(document.getElementById('yt-start-sec').value) || 0;
   if (!id) {
-    alert('Could not find a valid YouTube Video ID in that link!');
+    showToast('Could not find a valid YouTube Video ID in that link!', 'coral');
     return;
   }
+  playSnappyPop(680);
   myMusic = { id, start, title: 'Custom YT (' + id + ')' };
   document.getElementById('yt-selected-title').textContent = myMusic.title;
   playYoutubeMusic(id, start, myMusic.title);
@@ -2804,6 +3709,7 @@ function applyCustomYoutube() {
 }
 
 function clearYoutubeTrack() {
+  playSnappyPop(360);
   myMusic = null;
   document.getElementById('yt-selected-title').textContent = 'None';
   stopYoutubeMusic();
@@ -2811,7 +3717,7 @@ function clearYoutubeTrack() {
 }
 
 /* ============================================================================
-   8. LIVE PRESENTATION STAGE (Presenter Controls Slides & Laser for All)
+   9. LIVE PRESENTATION STAGE (Presenter Controls Slides & Laser for All)
    ============================================================================ */
 function renderPresentationStage(state) {
   const presId = state.presentOrder[state.currentPresIdx];
@@ -2819,7 +3725,7 @@ function renderPresentationStage(state) {
   if (!presenter) return;
 
   const isMePresenting = (presId === myId);
-  const deck = presenter.deck || createDefaultDeck(presenter.name);
+  const deck = presenter.deck || createDefaultDeck();
   const slideIdx = Math.min(state.currentSlideIdx || 0, deck.slides.length - 1);
   const slide = deck.slides[slideIdx];
 
@@ -2830,7 +3736,6 @@ function renderPresentationStage(state) {
   document.getElementById('pres-topic').textContent = presenter.article?.title || 'Mystery Wiki';
   document.getElementById('pres-slide-indicator').textContent = `${slideIdx + 1} / ${deck.slides.length}`;
 
-  // Play presenter's chosen YouTube background music for everyone when presenter switches!
   if (lastRenderedPresIdx !== state.currentPresIdx || lastRenderedPhase !== 'PRESENTING') {
     lastRenderedPresIdx = state.currentPresIdx;
     if (presenter.music && presenter.music.id) {
@@ -2840,7 +3745,6 @@ function renderPresentationStage(state) {
     }
   }
 
-  // Render slide into Present Stage
   const stage = document.getElementById('present-stage');
   stage.style.backgroundColor = slide.bgColor || '#ffffff';
   stage.className = 'slide-canvas-box ' + (slide.bgPattern || '');
@@ -2855,7 +3759,6 @@ function renderPresentationStage(state) {
     img.src = slide.drawing;
   }
 
-  // Toggle Presenter Controls vs Audience Reaction Pad
   document.getElementById('presenter-controls-bar').style.display = isMePresenting ? 'flex' : 'none';
   document.getElementById('audience-reactions-bar').style.display = isMePresenting ? 'none' : 'flex';
   document.getElementById('host-force-end-pitch').style.display = (!isMePresenting && isHost) ? 'inline-flex' : 'none';
@@ -2867,7 +3770,7 @@ function presenterChangeSlide(delta) {
   const deck = gameState.players[myId]?.deck || myDeck;
   const next = Math.max(0, Math.min(deck.slides.length - 1, gameState.currentSlideIdx + delta));
   if (next !== gameState.currentSlideIdx) {
-    playPop(560);
+    playSlideWhoosh();
     sendToHost({ type: 'SLIDE_CHANGE', slideIdx: next });
   }
 }
@@ -2882,7 +3785,7 @@ function handlePresenterLaserMove(e) {
   const presId = gameState.presentOrder[gameState.currentPresIdx];
   if (presId !== myId) return;
   const now = Date.now();
-  if (now - lastLaserSent < 45) return; // Throttle to ~22fps
+  if (now - lastLaserSent < 40) return;
   lastLaserSent = now;
   const r = e.currentTarget.getBoundingClientRect();
   const nx = (e.clientX - r.left) / r.width;
@@ -2896,7 +3799,7 @@ function hidePresenterLaser() {
 }
 
 function sendReaction(emoji) {
-  playPop(660);
+  playSnappyPop(680);
   broadcastEphemeral({ type: 'REACTION', emoji });
 }
 
@@ -2916,12 +3819,12 @@ function handleEphemeral(msg) {
     el.textContent = msg.emoji;
     el.style.left = (15 + Math.random() * 70) + 'vw';
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 2250);
+    setTimeout(() => el.remove(), 2150);
   }
 }
 
 /* ============================================================================
-   9. VOTING (1-10) & EXCITING TV-SHOW REVEAL & PODIUM
+   10. VOTING (1-10), TV-SHOW VOTE REVEAL & PODIUM
    ============================================================================ */
 const VOTE_FLAVORS = {
   1: '1 — Did you even read the Wikipedia page?! 💀',
@@ -2943,7 +3846,10 @@ function initVoteButtons() {
     btn.className = 'vote-num-btn';
     btn.textContent = i;
     btn.dataset.score = i;
-    btn.onclick = () => submitVote(i);
+    btn.onclick = (e) => {
+      spawnSparkles(e.clientX, e.clientY);
+      submitVote(i);
+    };
     grid.appendChild(btn);
   }
 }
@@ -2974,7 +3880,7 @@ function renderVotingScreen(state) {
 }
 
 function submitVote(score) {
-  playPop(400 + score * 45);
+  playSnappyPop(420 + score * 48);
   sendToHost({ type: 'CAST_VOTE', voterId: myId, score });
 }
 
@@ -3006,21 +3912,19 @@ function renderTVRevealScreen(state) {
   odometer.textContent = '0';
   avgBadge.textContent = 'Calculating...';
 
-  // Create face-down cards
   const cardEls = entries.map(ent => {
     const card = document.createElement('div');
     card.className = 'voter-reveal-card';
     card.innerHTML = `
       <div style="font-size:2rem;">${ent.avatar}</div>
-      <div style="font-weight:700; font-size:0.85rem; margin:4px 0;">${escapeHtml(ent.name)}</div>
-      <div class="card-score-val" style="font-family:'Bangers',cursive; font-size:2.4rem;">?</div>
+      <div style="font-weight:800; font-size:0.85rem; margin:4px 0;">${escapeHtml(ent.name)}</div>
+      <div class="card-score-val" style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:2rem;">?</div>
     `;
     row.appendChild(card);
     return { card, score: ent.score };
   });
 
-  // Dramatic Drumroll + Sequential TV Card Flips!
-  playDrumroll(1200);
+  playDrumroll(1150);
   let runningTotal = 0;
 
   cardEls.forEach((item, idx) => {
@@ -3038,16 +3942,16 @@ function renderTVRevealScreen(state) {
         avgBadge.textContent = `Average Score: ${avg} / 10`;
         if (Number(avg) >= 7.5 && typeof confetti === 'function') {
           playFanfare();
-          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+          confetti({ particleCount: 95, spread: 75, origin: { y: 0.6 } });
         }
       }
-    }, 1100 + idx * 750);
+    }, 1050 + idx * 720);
   });
 }
 
 function renderPodiumScreen(state) {
   if (typeof confetti === 'function') {
-    confetti({ particleCount: 130, spread: 90, origin: { y: 0.55 } });
+    confetti({ particleCount: 140, spread: 95, origin: { y: 0.55 } });
   }
   playFanfare();
 
@@ -3055,7 +3959,6 @@ function renderPodiumScreen(state) {
   const podiumEl = document.getElementById('podium-stage');
   podiumEl.innerHTML = '';
 
-  // Display order: 2nd (left), 1st (center), 3rd (right)
   const podiumOrder = [
     { player: sorted[1], rank: 2, medal: '🥈 2ND' },
     { player: sorted[0], rank: 1, medal: '👑 1ST' },
@@ -3067,7 +3970,7 @@ function renderPodiumScreen(state) {
     col.className = `podium-col rank-${item.rank}`;
     col.innerHTML = `
       <div style="font-size:3.2rem; margin-bottom:6px;">${item.player.avatar}</div>
-      <div style="font-weight:700; font-size:1.1rem; margin-bottom:8px;">${escapeHtml(item.player.name)}</div>
+      <div style="font-weight:800; font-size:1.1rem; margin-bottom:8px;">${escapeHtml(item.player.name)}</div>
       <div class="podium-block">
         <span class="badge-tag">${item.medal}</span>
         <div style="font-size:2.1rem; margin-top:6px;">${item.player.totalScore || 0} pts</div>
@@ -3076,7 +3979,6 @@ function renderPodiumScreen(state) {
     podiumEl.appendChild(col);
   });
 
-  // Full leaderboard + Download any player's slides as PNGs
   const list = document.getElementById('podium-full-list');
   list.innerHTML = '';
   sorted.forEach((p, idx) => {
@@ -3088,12 +3990,12 @@ function renderPodiumScreen(state) {
         <strong style="font-size:1.2rem;">#${idx + 1}</strong>
         <div class="player-avatar-circle" style="background:${p.color}">${p.avatar}</div>
         <div>
-          <strong>${escapeHtml(p.name)}</strong> — <span style="color:#555;">"${escapeHtml(p.article?.title || 'Wiki Deck')}"</span>
+          <strong>${escapeHtml(p.name)}</strong> — <span style="color:#555;">"${escapeHtml(p.article?.title || 'PresentPerfect Deck')}"</span>
         </div>
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
         <span class="bump-pill" style="background:var(--lime);">${p.totalScore || 0} pts</span>
-        <button class="bump-btn sm cyan" onclick="exportDeckObjectAsPNGs('${p.id}')">📸 Download PNGs</button>
+        <button class="bump-btn sm cyan" onclick="exportDeckObjectAsPNGs('${p.id}')">📸 Download HD PNGs</button>
       </div>
     `;
     list.appendChild(row);
@@ -3103,30 +4005,30 @@ function renderPodiumScreen(state) {
 }
 
 /* ============================================================================
-   10. HIGH-DPI NATIVE CANVAS PNG EXPORTER (Downloads PPT Slides as PNGs!)
+   11. HIGH-DPI NATIVE CANVAS PNG EXPORTER (1280x720 HD PNGs!)
    ============================================================================ */
 async function exportCurrentDeckAsPNGs() {
-  await downloadDeckPNGs(myDeck, myProfile.name || 'WikiPitch');
+  await downloadDeckPNGs(myDeck, myProfile.name || 'PresentPerfect');
 }
 
 async function exportPresentedDeckAsPNGs() {
   const presId = gameState.presentOrder[gameState.currentPresIdx];
   const presenter = gameState.players[presId];
   if (presenter && presenter.deck) {
-    await downloadDeckPNGs(presenter.deck, presenter.name);
+    await downloadDeckPNGs(presenter.deck, presenter.name || 'PresentPerfect');
   }
 }
 
 async function exportDeckObjectAsPNGs(playerId) {
   const p = gameState.players[playerId];
   if (p && p.deck) {
-    await downloadDeckPNGs(p.deck, p.name);
+    await downloadDeckPNGs(p.deck, p.name || 'PresentPerfect');
   }
 }
 
 async function downloadDeckPNGs(deck, authorName) {
-  playPop(700);
-  const cleanName = authorName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'Presentation';
+  playSnappyPop(720);
+  const cleanName = authorName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'PresentPerfect';
   const blobs = [];
 
   for (let i = 0; i < deck.slides.length; i++) {
@@ -3135,14 +4037,15 @@ async function downloadDeckPNGs(deck, authorName) {
     blobs.push({ name: `${cleanName}-slide-${i + 1}.png`, blob });
   }
 
-  // If 1 slide, download directly as .png; if multiple slides, package all PNGs into a clean ZIP (plus first PNG if JSZip unavailable)
   if (blobs.length === 1 || typeof JSZip === 'undefined') {
     blobs.forEach(b => triggerBlobDownload(b.blob, b.name));
+    showToast('📸 Downloaded HD Slide PNG!', 'lime');
   } else {
     const zip = new JSZip();
     blobs.forEach(b => zip.file(b.name, b.blob));
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-    triggerBlobDownload(zipBlob, `${cleanName}-slides-PNGs.zip`);
+    triggerBlobDownload(zipBlob, `${cleanName}-slides-HD-PNGs.zip`);
+    showToast('📦 Downloaded ' + blobs.length + ' HD Slide PNGs!', 'lime');
   }
 }
 
@@ -3165,7 +4068,7 @@ async function renderSlideToOffscreenCanvas(slide, W, H) {
   const sx = W / 960;
   const sy = H / 540;
 
-  // 1. Background fill & pattern
+  // 1. Background
   if (slide.bgPattern === 'bg-sunset') {
     const grad = ctx.createLinearGradient(0, 0, W, H);
     grad.addColorStop(0, '#FF9A9E');
@@ -3175,15 +4078,15 @@ async function renderSlideToOffscreenCanvas(slide, W, H) {
     ctx.fillRect(0, 0, W, H);
   } else if (slide.bgPattern === 'bg-cyber') {
     const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, '#141416');
-    grad.addColorStop(1, '#2d1b69');
+    grad.addColorStop(0, '#18181B');
+    grad.addColorStop(1, '#2E1A72');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
   } else {
     ctx.fillStyle = slide.bgColor || '#FFFFFF';
     ctx.fillRect(0, 0, W, H);
     if (slide.bgPattern === 'bg-dots') {
-      ctx.fillStyle = 'rgba(20,20,22,0.18)';
+      ctx.fillStyle = 'rgba(24, 24, 27, 0.2)';
       for (let x = 14; x < W; x += 26) {
         for (let y = 14; y < H; y += 26) {
           ctx.beginPath();
@@ -3192,14 +4095,33 @@ async function renderSlideToOffscreenCanvas(slide, W, H) {
         }
       }
     } else if (slide.bgPattern === 'bg-grid') {
-      ctx.strokeStyle = 'rgba(20,20,22,0.12)';
+      ctx.strokeStyle = 'rgba(24, 24, 27, 0.12)';
       ctx.lineWidth = 1.5;
       for (let x = 0; x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
       for (let y = 0; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    } else if (slide.bgPattern === 'bg-stripes') {
+      ctx.strokeStyle = 'rgba(24, 24, 27, 0.07)';
+      ctx.lineWidth = 12;
+      for (let d = -H; d < W + H; d += 34) {
+        ctx.beginPath();
+        ctx.moveTo(d, 0);
+        ctx.lineTo(d + H, H);
+        ctx.stroke();
+      }
+    } else if (slide.bgPattern === 'bg-confetti') {
+      const dots = ['#FF5454', '#8F6BFF', '#3BE8E0'];
+      for (let x = 16; x < W; x += 52) {
+        for (let y = 16; y < H; y += 52) {
+          ctx.fillStyle = dots[(x + y) % dots.length];
+          ctx.beginPath();
+          ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
   }
 
-  // 2. Elements (Shapes, Images, Stickers, Text)
+  // 2. Elements
   for (const el of slide.elements) {
     const x = el.x * sx, y = el.y * sy, w = el.w * sx, h = el.h * sy;
     ctx.save();
@@ -3208,7 +4130,7 @@ async function renderSlideToOffscreenCanvas(slide, W, H) {
     ctx.translate(-w / 2, -h / 2);
 
     if (el.type === 'shape') {
-      drawShapeOnCanvas(ctx, el.shape, w, h, el.fill || '#C6FF33');
+      drawShapeOnCanvas(ctx, el.shape, w, h, el.fill || '#C8FF2E', el.borderColor || '#18181B');
     } else if (el.type === 'image') {
       await drawImageSafeOnCanvas(ctx, el.src, w, h);
     } else if (el.type === 'sticker') {
@@ -3219,39 +4141,70 @@ async function renderSlideToOffscreenCanvas(slide, W, H) {
         ctx.fillText(el.src, w / 2, h / 2);
       } else {
         ctx.fillStyle = '#FFE600';
-        ctx.strokeStyle = '#141416';
+        ctx.strokeStyle = '#18181B';
         ctx.lineWidth = 4;
         roundRectPath(ctx, 4, 4, w - 8, h - 8, h / 2);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle = '#141416';
-        ctx.font = `bold ${Math.round(h * 0.34)}px "Bangers", sans-serif`;
+        ctx.fillStyle = '#18181B';
+        ctx.font = `bold ${Math.round(h * 0.32)}px "Fredoka", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(el.stickerText || '', w / 2, h / 2);
       }
     } else if (el.type === 'text') {
-      if (el.fill && el.fill !== 'transparent') {
-        ctx.fillStyle = '#141416';
-        roundRectPath(ctx, 4, 4, w, h, 18);
+      const bStyle = el.boxStyle || 'bump';
+      const fillCol = el.fill || '#FFE600';
+      const borderCol = el.borderColor || '#18181B';
+      if (bStyle === 'bump' || bStyle === 'pill' || bStyle === 'speech') {
+        const rad = bStyle === 'pill' ? h / 2 : 20;
+        ctx.fillStyle = borderCol;
+        roundRectPath(ctx, 5, 5, w, h, rad);
         ctx.fill();
-        ctx.fillStyle = el.fill;
-        ctx.strokeStyle = '#141416';
-        ctx.lineWidth = 3.5;
-        roundRectPath(ctx, 0, 0, w, h, 18);
+        ctx.fillStyle = fillCol;
+        ctx.strokeStyle = borderCol;
+        ctx.lineWidth = 4;
+        roundRectPath(ctx, 0, 0, w, h, rad);
         ctx.fill();
         ctx.stroke();
+      } else if (bStyle === 'sticky') {
+        ctx.fillStyle = fillCol;
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = 'rgba(24, 24, 27, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, w, h);
+      } else if (bStyle === 'neon') {
+        ctx.fillStyle = '#18181B';
+        roundRectPath(ctx, 0, 0, w, h, 20);
+        ctx.fill();
+        ctx.strokeStyle = fillCol;
+        ctx.lineWidth = 4.5;
+        ctx.stroke();
+      } else if (bStyle === 'outline') {
+        ctx.save();
+        ctx.setLineDash([10, 7]);
+        ctx.strokeStyle = borderCol;
+        ctx.lineWidth = 4;
+        roundRectPath(ctx, 0, 0, w, h, 20);
+        ctx.stroke();
+        ctx.restore();
       }
-      ctx.fillStyle = el.color || '#141416';
+
+      ctx.fillStyle = (bStyle === 'neon' && (!el.color || el.color === '#18181B')) ? '#FFFFFF' : (el.color || '#18181B');
       const fSize = Math.round((el.fontSize || 28) * sx);
-      ctx.font = `700 ${fSize}px "${el.font || 'Fredoka'}", sans-serif`;
-      ctx.textBaseline = 'top';
-      wrapTextCanvas(ctx, el.text || '', 14, 12, w - 28, fSize * 1.24);
+      const weight = (el.bold !== false) ? '700' : '500';
+      const style = el.italic ? 'italic ' : '';
+      ctx.font = `${style}${weight} ${fSize}px "${el.font || 'Fredoka'}", sans-serif`;
+      const align = el.align || 'center';
+      ctx.textAlign = align;
+      ctx.textBaseline = 'middle';
+      const anchorX = align === 'left' ? 18 : align === 'right' ? w - 18 : w / 2;
+      wrapTextAlignedCanvas(ctx, el.text || '', anchorX, h / 2, w - 32, fSize * 1.22);
     }
     ctx.restore();
   }
 
-  // 3. Freehand Ink Drawing Layer
+  // 3. Ink Drawing Layer
   if (slide.drawing) {
     await drawImageSafeOnCanvas(ctx, slide.drawing, W, H);
   }
@@ -3270,20 +4223,13 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawShapeOnCanvas(ctx, shape, w, h, fill) {
+function drawShapeOnCanvas(ctx, shape, w, h, fill, stroke = '#18181B') {
   ctx.fillStyle = fill;
-  ctx.strokeStyle = '#141416';
+  ctx.strokeStyle = stroke;
   ctx.lineWidth = 4.5;
   ctx.beginPath();
   if (shape === 'circle') {
     ctx.ellipse(w / 2, h / 2, w / 2 - 4, h / 2 - 4, 0, 0, Math.PI * 2);
-  } else if (shape === 'pill') {
-    roundRectPath(ctx, 4, 4, w - 8, h - 8, Math.min(w, h) / 2);
-  } else if (shape === 'triangle') {
-    ctx.moveTo(w / 2, 6);
-    ctx.lineTo(w - 6, h - 6);
-    ctx.lineTo(6, h - 6);
-    ctx.closePath();
   } else if (shape === 'arrow') {
     ctx.moveTo(6, h * 0.32);
     ctx.lineTo(w * 0.58, h * 0.32);
@@ -3293,8 +4239,21 @@ function drawShapeOnCanvas(ctx, shape, w, h, fill) {
     ctx.lineTo(w * 0.58, h * 0.68);
     ctx.lineTo(6, h * 0.68);
     ctx.closePath();
+  } else if (shape === 'star') {
+    const pts = [[0.5,0.04],[0.63,0.34],[0.96,0.38],[0.71,0.60],[0.78,0.93],[0.5,0.76],[0.22,0.93],[0.29,0.60],[0.04,0.38],[0.37,0.34]];
+    pts.forEach(([px, py], i) => i === 0 ? ctx.moveTo(px * w, py * h) : ctx.lineTo(px * w, py * h));
+    ctx.closePath();
+  } else if (shape === 'heart') {
+    ctx.moveTo(w * 0.5, h * 0.9);
+    ctx.bezierCurveTo(w * 0.5, h * 0.9, w * 0.08, h * 0.62, w * 0.08, h * 0.32);
+    ctx.bezierCurveTo(w * 0.08, h * 0.16, w * 0.21, h * 0.06, w * 0.35, h * 0.06);
+    ctx.bezierCurveTo(w * 0.43, h * 0.06, w * 0.48, h * 0.11, w * 0.5, h * 0.16);
+    ctx.bezierCurveTo(w * 0.52, h * 0.11, w * 0.57, h * 0.06, w * 0.65, h * 0.06);
+    ctx.bezierCurveTo(w * 0.79, h * 0.06, w * 0.92, h * 0.16, w * 0.92, h * 0.32);
+    ctx.bezierCurveTo(w * 0.92, h * 0.62, w * 0.5, h * 0.9, w * 0.5, h * 0.9);
+    ctx.closePath();
   } else {
-    roundRectPath(ctx, 4, 4, w - 8, h - 8, 14);
+    roundRectPath(ctx, 4, 4, w - 8, h - 8, 16);
   }
   ctx.fill();
   ctx.stroke();
@@ -3311,14 +4270,13 @@ function drawImageSafeOnCanvas(ctx, src, w, h) {
       resolve();
     };
     img.onerror = () => {
-      // Fallback framed card if an external GIF lacks CORS headers
-      ctx.fillStyle = '#F1EFE7';
-      ctx.strokeStyle = '#141416';
+      ctx.fillStyle = '#EFECE2';
+      ctx.strokeStyle = '#18181B';
       ctx.lineWidth = 3;
       roundRectPath(ctx, 4, 4, w - 8, h - 8, 14);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = '#141416';
+      ctx.fillStyle = '#18181B';
       ctx.font = 'bold 20px "Fredoka", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('🖼️ Embedded Media', w / 2, h / 2);
@@ -3328,21 +4286,25 @@ function drawImageSafeOnCanvas(ctx, src, w, h) {
   });
 }
 
-function wrapTextCanvas(ctx, text, x, y, maxWidth, lineHeight) {
+function wrapTextAlignedCanvas(ctx, text, anchorX, cy, maxWidth, lineHeight) {
   const words = text.split(/\s+/);
+  const lines = [];
   let line = '';
-  let curY = y;
   for (let n = 0; n < words.length; n++) {
     const testLine = line + words[n] + ' ';
     if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-      ctx.fillText(line.trim(), x, curY);
+      lines.push(line.trim());
       line = words[n] + ' ';
-      curY += lineHeight;
     } else {
       line = testLine;
     }
   }
-  ctx.fillText(line.trim(), x, curY);
+  lines.push(line.trim());
+  const totalH = lines.length * lineHeight;
+  let startY = cy - totalH / 2 + lineHeight / 2;
+  lines.forEach((l, i) => {
+    ctx.fillText(l, anchorX, startY + i * lineHeight);
+  });
 }
 
 function escapeHtml(str) {
