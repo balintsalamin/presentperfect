@@ -1,0 +1,3357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WikiPitch! — Wikipedia Party Presentation Game</title>
+  <!-- Google Fonts for UI & Slide Editor -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Caveat:wght@700&family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@600;800&family=Playfair+Display:ital,wght@0,700;1,700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <!-- PeerJS for Zero-Server P2P Multiplayer -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- JSZip for Multi-PNG Slide Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Canvas Confetti for TV Reveal & Podium -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #FFFDF7;
+      --ink: #141416;
+      --lime: #C6FF33;
+      --violet: #9D7BFF;
+      --coral: #FF5C5C;
+      --cyan: #4DEEEA;
+      --yellow: #FFE600;
+      --pink: #FF85E4;
+      --surface: #FFFFFF;
+      --muted: #F1EFE7;
+      --border: 3px solid #141416;
+      --shadow: 4px 4px 0px #141416;
+      --shadow-lg: 7px 7px 0px #141416;
+      --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      background-image: radial-gradient(#d8d4c5 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    /* Bump-style Tactile UI Components */
+    .bump-card {
+      background: var(--surface);
+      border: var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .bump-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: 2px 2px 0 #141416;
+    }
+
+    .bump-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border: var(--border);
+      border-radius: 999px;
+      background: var(--lime);
+      color: var(--ink);
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.16s var(--bounce), box-shadow 0.16s ease, background-color 0.15s ease;
+    }
+
+    .bump-btn:hover:not(:disabled) {
+      transform: translate(-2px, -2px) scale(1.02);
+      box-shadow: 6px 6px 0 #141416;
+    }
+
+    .bump-btn:active:not(:disabled) {
+      transform: translate(3px, 3px) scale(0.98);
+      box-shadow: 1px 1px 0 #141416;
+    }
+
+    .bump-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .bump-btn.violet { background: var(--violet); color: #fff; }
+    .bump-btn.coral { background: var(--coral); color: #fff; }
+    .bump-btn.cyan { background: var(--cyan); }
+    .bump-btn.yellow { background: var(--yellow); }
+    .bump-btn.white { background: #fff; }
+    .bump-btn.sm { padding: 7px 14px; font-size: 0.88rem; border-width: 2.5px; box-shadow: 2.5px 2.5px 0 #141416; }
+
+    .bump-input, .bump-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: var(--border);
+      border-radius: 16px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: inset 2px 2px 0 rgba(0,0,0,0.06);
+      outline: none;
+      user-select: text;
+    }
+
+    .bump-input:focus, .bump-select:focus {
+      background: #fffef0;
+      box-shadow: 0 0 0 3px var(--violet);
+    }
+
+    /* Top HUD Bar */
+    #top-hud {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: rgba(255, 253, 247, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: var(--border);
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--yellow);
+      border: var(--border);
+      border-radius: 999px;
+      padding: 6px 16px;
+      box-shadow: 3px 3px 0 #141416;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      transform: rotate(-1.5deg);
+    }
+
+    .timer-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 800;
+      background: var(--ink);
+      color: var(--lime);
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: var(--border);
+      box-shadow: 3px 3px 0 var(--violet);
+      transition: transform 0.2s var(--bounce);
+    }
+
+    .timer-pill.urgent {
+      background: var(--coral);
+      color: #fff;
+      animation: pulseUrgent 0.6s infinite alternate;
+    }
+
+    @keyframes pulseUrgent {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .screen.active {
+      display: block;
+      animation: popIn 0.35s var(--bounce);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Landing / Lobby */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      max-width: 1050px;
+      margin: 24px auto;
+    }
+
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+
+    .avatar-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .avatar-opt {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 2.5px solid var(--ink);
+      background: #fff;
+      font-size: 1.45rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s var(--bounce);
+    }
+    .avatar-opt.selected {
+      background: var(--lime);
+      transform: scale(1.14) rotate(-4deg);
+      box-shadow: 3px 3px 0 #141416;
+    }
+
+    .player-bubble {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: var(--border);
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 3px 3px 0 #141416;
+      animation: popIn 0.3s var(--bounce);
+    }
+
+    .player-avatar-circle {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 2.5px solid #141416;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    /* Wikipedia Reader Styling */
+    .wiki-viewer {
+      background: #fff;
+      border: var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .wiki-header-bar {
+      background: var(--cyan);
+      border-bottom: var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .wiki-content-scroll {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1;
+      user-select: text !important;
+      line-height: 1.65;
+      font-size: 0.98rem;
+    }
+
+    .wiki-content-scroll * {
+      user-select: text !important;
+    }
+
+    .wiki-content-scroll h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin: 0 0 12px 0;
+      border-bottom: 2px solid #e5e5e5;
+      padding-bottom: 8px;
+    }
+
+    .wiki-content-scroll h2, .wiki-content-scroll h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 4px;
+      margin-top: 20px;
+    }
+
+    .wiki-content-scroll img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 2px solid #141416;
+      cursor: grab;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .wiki-content-scroll img:hover {
+      transform: scale(1.02);
+      box-shadow: 4px 4px 0 var(--lime);
+    }
+
+    .wiki-content-scroll table.infobox {
+      float: right;
+      margin: 0 0 16px 16px;
+      max-width: 270px;
+      border: 2px solid #141416;
+      border-radius: 12px;
+      background: #faf9f5;
+      font-size: 0.85rem;
+      padding: 8px;
+    }
+
+    .wiki-content-scroll .mw-editsection,
+    .wiki-content-scroll .reference,
+    .wiki-content-scroll .reflist,
+    .wiki-content-scroll .navbox {
+      display: none !important;
+    }
+
+    /* Floating Selection Helper */
+    #wiki-selection-pop {
+      position: fixed;
+      z-index: 999;
+      display: none;
+      background: var(--ink);
+      color: var(--lime);
+      border: 2.5px solid #fff;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+      cursor: pointer;
+    }
+
+    /* Builder Split Workspace */
+    .builder-layout {
+      display: grid;
+      grid-template-columns: 40% 60%;
+      gap: 16px;
+      height: calc(100vh - 96px);
+      min-height: 620px;
+    }
+
+    @media (max-width: 1024px) {
+      .builder-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .wiki-viewer { height: 420px; }
+    }
+
+    .ppt-studio {
+      background: var(--surface);
+      border: var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ppt-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 12px;
+      background: var(--muted);
+      border-bottom: var(--border);
+    }
+
+    .tool-btn {
+      padding: 7px 11px;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      background: #fff;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 2px 2px 0 #141416;
+      transition: transform 0.12s var(--bounce);
+    }
+
+    .tool-btn:hover { transform: translateY(-1px); background: #fffbe0; }
+    .tool-btn.active { background: var(--lime); box-shadow: inset 2px 2px 0 rgba(0,0,0,0.15); }
+
+    .ppt-subbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #fff;
+      border-bottom: 2px solid #e6e3d8;
+      font-size: 0.84rem;
+    }
+
+    /* 16:9 Slide Stage Container */
+    .stage-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: #e9e6dc;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-canvas-box {
+      position: relative;
+      width: 100%;
+      max-width: 780px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 3px solid #141416;
+      border-radius: 16px;
+      box-shadow: 6px 6px 0 #141416;
+      overflow: hidden;
+    }
+
+    .slide-canvas-box.drag-over {
+      outline: 4px dashed var(--violet);
+      outline-offset: -8px;
+      background-color: #f6f2ff !important;
+    }
+
+    /* Slide Background Patterns */
+    .bg-dots {
+      background-image: radial-gradient(rgba(20,20,22,0.18) 2px, transparent 2px);
+      background-size: 20px 20px;
+    }
+    .bg-grid {
+      background-image: linear-gradient(to right, rgba(20,20,22,0.1) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(20,20,22,0.1) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .bg-sunset {
+      background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 50%, #F6D365 100%) !important;
+    }
+    .bg-cyber {
+      background: linear-gradient(135deg, #141416 0%, #2d1b69 100%) !important;
+    }
+
+    /* Slide Elements */
+    .slide-el {
+      position: absolute;
+      cursor: move;
+      touch-action: none;
+    }
+
+    .slide-el.selected {
+      outline: 2.5px dashed var(--violet);
+      outline-offset: 3px;
+    }
+
+    .el-handle-resize {
+      position: absolute;
+      right: -8px;
+      bottom: -8px;
+      width: 16px;
+      height: 16px;
+      background: var(--lime);
+      border: 2.5px solid #141416;
+      border-radius: 50%;
+      cursor: nwse-resize;
+      display: none;
+      z-index: 20;
+    }
+
+    .el-handle-rotate {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 16px;
+      background: var(--cyan);
+      border: 2.5px solid #141416;
+      border-radius: 50%;
+      cursor: grab;
+      display: none;
+      z-index: 20;
+    }
+
+    .slide-el.selected .el-handle-resize,
+    .slide-el.selected .el-handle-rotate {
+      display: block;
+    }
+
+    .el-text-content {
+      width: 100%;
+      height: 100%;
+      padding: 8px 12px;
+      word-break: break-word;
+      overflow: hidden;
+      outline: none;
+      line-height: 1.25;
+    }
+
+    .el-text-content[contenteditable="true"] {
+      cursor: text;
+      user-select: text !important;
+      background: rgba(255,255,255,0.85);
+    }
+
+    .sticker-diecut {
+      filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(2px 3px 0 #141416);
+    }
+
+    /* Freehand Drawing Canvas Overlay */
+    #draw-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    #draw-layer.drawing-active {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+
+    /* Slide Filmstrip */
+    .slide-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--muted);
+      border-top: var(--border);
+      overflow-x: auto;
+    }
+
+    .slide-thumb {
+      width: 96px;
+      height: 54px;
+      border-radius: 10px;
+      border: 2.5px solid #141416;
+      background: #fff;
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      position: relative;
+      transition: transform 0.14s var(--bounce);
+    }
+
+    .slide-thumb.active {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px var(--lime), 3px 3px 0 #141416;
+      transform: translateY(-2px);
+    }
+
+    /* Popover Drawers (Stickers, GIFs, Music) */
+    .drawer-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 20, 22, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .drawer-modal.open { display: flex; }
+
+    .drawer-box {
+      background: var(--bg);
+      border: var(--border);
+      border-radius: 26px;
+      box-shadow: var(--shadow-lg);
+      max-width: 620px;
+      width: 100%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: popIn 0.25s var(--bounce);
+    }
+
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 10px;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .sticker-item {
+      border: 2px solid #141416;
+      border-radius: 14px;
+      background: #fff;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.14s var(--bounce);
+    }
+    .sticker-item:hover {
+      transform: scale(1.08) rotate(-3deg);
+      background: var(--lime);
+    }
+
+    /* Presentation Stage & Laser Pointer */
+    .laser-dot {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 15%, #FF2A55 55%, rgba(255,42,85,0) 75%);
+      box-shadow: 0 0 16px #FF2A55, 0 0 28px #FF2A55;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 50;
+      display: none;
+    }
+
+    .floating-reaction {
+      position: fixed;
+      bottom: 80px;
+      font-size: 2.6rem;
+      pointer-events: none;
+      z-index: 300;
+      animation: floatUp 2.2s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 0; transform: translateY(20px) scale(0.5); }
+      15% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-340px) scale(0.9) rotate(12deg); }
+    }
+
+    /* Voting Pad */
+    .vote-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      max-width: 540px;
+      margin: 20px auto;
+    }
+
+    .vote-num-btn {
+      aspect-ratio: 1;
+      border: var(--border);
+      border-radius: 20px;
+      background: #fff;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.16s var(--bounce), background 0.15s;
+    }
+
+    .vote-num-btn:hover {
+      transform: translateY(-4px) scale(1.06);
+      background: var(--yellow);
+    }
+
+    .vote-num-btn.picked {
+      background: var(--lime);
+      transform: scale(1.1) rotate(-3deg);
+      box-shadow: 6px 6px 0 #141416;
+    }
+
+    /* TV-Show Dramatic Vote Reveal */
+    .tv-arena {
+      background: radial-gradient(circle at 50% 20%, #2f1c6a 0%, #141416 80%);
+      color: #fff;
+      border: 4px solid #141416;
+      border-radius: 28px;
+      box-shadow: var(--shadow-lg);
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tv-spotlight {
+      position: absolute;
+      top: -60px;
+      width: 240px;
+      height: 450px;
+      background: linear-gradient(180deg, rgba(198,255,51,0.22) 0%, rgba(198,255,51,0) 100%);
+      transform-origin: top center;
+      pointer-events: none;
+      animation: sweepLight 3.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes sweepLight {
+      from { left: 10%; transform: rotate(-18deg); }
+      to { left: 65%; transform: rotate(18deg); }
+    }
+
+    .reveal-cards-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin: 26px 0;
+    }
+
+    .voter-reveal-card {
+      width: 135px;
+      background: #232030;
+      border: 3px solid #fff;
+      border-radius: 20px;
+      padding: 14px 10px;
+      box-shadow: 4px 4px 0 #000;
+      transition: transform 0.4s var(--bounce), background 0.3s ease;
+    }
+
+    .voter-reveal-card.flipped {
+      background: var(--lime);
+      color: var(--ink);
+      border-color: #141416;
+      transform: scale(1.08) rotate(-2deg);
+    }
+
+    .voter-reveal-card.high-score {
+      background: var(--yellow);
+      box-shadow: 0 0 25px var(--yellow);
+    }
+
+    .big-odometer {
+      font-family: 'Bangers', cursive;
+      font-size: 5rem;
+      letter-spacing: 3px;
+      color: var(--lime);
+      text-shadow: 4px 4px 0 #000;
+      line-height: 1;
+      margin: 10px 0;
+    }
+
+    /* Grand Finale Podium */
+    .podium-stage {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 16px;
+      margin: 36px auto 24px;
+      max-width: 760px;
+      min-height: 310px;
+    }
+
+    .podium-col {
+      flex: 1;
+      max-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: riseUp 0.8s var(--bounce) backwards;
+    }
+
+    .podium-col.rank-1 { animation-delay: 0.45s; }
+    .podium-col.rank-2 { animation-delay: 0.2s; }
+    .podium-col.rank-3 { animation-delay: 0.05s; }
+
+    @keyframes riseUp {
+      from { opacity: 0; transform: translateY(70px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .podium-block {
+      width: 100%;
+      border: 3.5px solid #141416;
+      border-radius: 22px 22px 12px 12px;
+      box-shadow: 6px 6px 0 #141416;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 10px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+    }
+
+    .rank-1 .podium-block { height: 195px; background: var(--yellow); }
+    .rank-2 .podium-block { height: 145px; background: var(--cyan); }
+    .rank-3 .podium-block { height: 112px; background: var(--pink); }
+
+    .badge-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 2px solid #141416;
+      font-size: 0.76rem;
+      font-weight: 700;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden YouTube Audio Player Container -->
+  <div id="yt-hidden-holder" style="position:fixed; left:-9999px; top:-9999px; width:260px; height:150px; pointer-events:none;">
+    <div id="yt-player"></div>
+  </div>
+
+  <!-- Top Persistent HUD -->
+  <header id="top-hud">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="logo-badge">🌐 WikiPitch!</div>
+      <span id="hud-room-badge" class="bump-pill" style="display:none; background:var(--violet); color:#fff;">
+        ROOM: <strong id="hud-room-code">----</strong>
+      </span>
+      <span id="hud-phase-label" class="bump-pill" style="background:var(--muted);">Lobby</span>
+    </div>
+
+    <div id="hud-timer-box" style="display:none; align-items:center; gap:10px;">
+      <div id="hud-timer" class="timer-pill">01:30</div>
+      <button id="hud-host-skip" class="bump-btn sm coral" style="display:none;" onclick="hostForceNextPhase()">Skip ⏭</button>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button id="sound-toggle-btn" class="bump-btn sm white" onclick="toggleSoundFX()">🔊 SFX ON</button>
+      <div id="music-now-playing" class="bump-pill" style="display:none; background:var(--lime);">
+        🎵 <span id="music-track-label">Track</span>
+        <button onclick="toggleMusicMute()" style="border:none; background:none; cursor:pointer; font-weight:800;" id="music-mute-btn">🔊</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Floating Wikipedia Text Selection Popover -->
+  <button id="wiki-selection-pop" onmousedown="addSelectedWikiTextToSlide(event)">➕ Drop Text onto Slide</button>
+
+  <!-- ==================== SCREEN 1: LANDING & LOBBY ==================== -->
+  <main id="screen-lobby" class="screen active">
+    <div id="setup-panel" class="hero-grid">
+      <!-- Left: Player Profile Card -->
+      <div class="bump-card" style="background:#fff;">
+        <div class="bump-pill" style="background:var(--lime); margin-bottom:12px;">✨ STEP 1: YOUR VIBE</div>
+        <h1 style="font-size:2.3rem; margin:0 0 8px 0;">Drop into the Wiki Rabbit Hole!</h1>
+        <p style="margin:0 0 18px 0; color:#444;">Get a random Wikipedia article, speed-build an unhinged PowerPoint with stickers, GIFs &amp; YouTube music, and pitch it live to your friends.</p>
+
+        <label style="font-weight:700; display:block; margin-bottom:6px;">Your Nickname</label>
+        <input id="input-nickname" class="bump-input" type="text" maxlength="18" placeholder="e.g. CaptainCitation" />
+
+        <label style="font-weight:700; display:block; margin:16px 0 6px;">Pick Your Avatar</label>
+        <div id="avatar-picker" class="avatar-picker"></div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:24px;">
+          <button class="bump-btn" style="background:var(--lime); padding:15px;" onclick="createRoom()">
+            🚀 Host New Room
+          </button>
+          <div style="display:flex; gap:8px;">
+            <input id="input-room-code" class="bump-input" style="text-transform:uppercase; text-align:center; letter-spacing:2px;" maxlength="4" placeholder="CODE" />
+            <button class="bump-btn violet" onclick="joinRoom()">Join</button>
+          </div>
+        </div>
+        <p id="lobby-status-msg" style="margin:12px 0 0; font-weight:700; color:var(--coral); min-height:22px;"></p>
+      </div>
+
+      <!-- Right: How It Works Card -->
+      <div class="bump-card" style="background:var(--yellow);">
+        <div class="bump-pill" style="background:#fff; margin-bottom:12px;">⚡ HOW TO PLAY</div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div class="bump-card" style="padding:14px; border-radius:18px;">
+            <strong>1. 📖 Speed-Read (1–2 min)</strong><br/>
+            <span style="font-size:0.92rem;">Everyone gets a completely random Wikipedia page. Read fast and find the weirdest facts!</span>
+          </div>
+          <div class="bump-card" style="padding:14px; border-radius:18px;">
+            <strong>2. 🎨 Chaos Slide Deck</strong><br/>
+            <span style="font-size:0.92rem;">Drag &amp; drop text and images straight from Wikipedia onto your slides. Add shapes, drawings, GIFs, stickers &amp; YouTube background music!</span>
+          </div>
+          <div class="bump-card" style="padding:14px; border-radius:18px;">
+            <strong>3. 🎤 Live Pitch &amp; TV Vote Reveal</strong><br/>
+            <span style="font-size:0.92rem;">Control slides live for everyone while your YouTube track plays. Friends score 1–10 before a dramatic TV-show reveal &amp; podium!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Room Waiting Lobby -->
+    <div id="room-waiting-panel" style="display:none; max-width:980px; margin:20px auto;">
+      <div class="hero-grid" style="margin:0;">
+        <!-- Players List -->
+        <div class="bump-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+            <h2 style="margin:0;">Squad in Lobby (<span id="lobby-player-count">1</span>)</h2>
+            <button class="bump-btn sm cyan" onclick="copyInviteLink()">🔗 Copy Invite Link</button>
+          </div>
+          <div id="lobby-players-list" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
+        </div>
+
+        <!-- Host Game Settings -->
+        <div class="bump-card" style="background:var(--muted);">
+          <h2 style="margin:0 0 14px 0;">⚙️ Match Rules</h2>
+
+          <label style="font-weight:700; display:block; margin-bottom:5px;">🌐 Wikipedia Language</label>
+          <select id="setting-lang" class="bump-select" onchange="syncHostSettings()">
+            <option value="en">🇺🇸 English (en.wikipedia.org)</option>
+            <option value="hu">🇭🇺 Magyar / Hungarian (hu.wikipedia.org)</option>
+            <option value="de">🇩🇪 Deutsch / German (de.wikipedia.org)</option>
+            <option value="es">🇪🇸 Español / Spanish (es.wikipedia.org)</option>
+            <option value="fr">🇫🇷 Français / French (fr.wikipedia.org)</option>
+            <option value="it">🇮🇹 Italiano / Italian (it.wikipedia.org)</option>
+            <option value="pt">🇵🇹 Português / Portuguese (pt.wikipedia.org)</option>
+            <option value="pl">🇵🇱 Polski / Polish (pl.wikipedia.org)</option>
+            <option value="ja">🇯🇵 日本語 / Japanese (ja.wikipedia.org)</option>
+          </select>
+
+          <label style="font-weight:700; display:block; margin:14px 0 5px;">📖 Reading Time (Wiki Only)</label>
+          <select id="setting-read-time" class="bump-select" onchange="syncHostSettings()">
+            <option value="60">1 Minute (60s)</option>
+            <option value="90" selected>1.5 Minutes (90s)</option>
+            <option value="120">2 Minutes (120s)</option>
+          </select>
+
+          <label style="font-weight:700; display:block; margin:14px 0 5px;">🎨 Slide Building Time</label>
+          <select id="setting-build-time" class="bump-select" onchange="syncHostSettings()">
+            <option value="120">2 Minutes (Speed Chaos)</option>
+            <option value="180">3 Minutes</option>
+            <option value="240" selected>4 Minutes (Recommended)</option>
+            <option value="300">5 Minutes</option>
+            <option value="420">7 Minutes (Masterpiece)</option>
+          </select>
+
+          <div id="host-start-area" style="margin-top:22px;">
+            <button class="bump-btn" style="width:100%; font-size:1.2rem; padding:16px;" onclick="hostStartGame()">
+              🎬 Start Game Now!
+            </button>
+            <p style="font-size:0.82rem; color:#555; text-align:center; margin:8px 0 0;">Works solo too if you want to test or practice!</p>
+          </div>
+          <div id="guest-wait-area" style="display:none; margin-top:22px; text-align:center;">
+            <div class="bump-pill" style="background:var(--yellow);">⏳ Waiting for host to start the game...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== SCREEN 2: READING PHASE ==================== -->
+  <section id="screen-reading" class="screen">
+    <div style="max-width:1000px; margin:0 auto;">
+      <div class="bump-card" style="background:var(--yellow); margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+          <span class="badge-tag" style="background:var(--ink); color:var(--lime);">PHASE 1: INTEL GATHERING</span>
+          <h2 style="margin:6px 0 2px;">Study your secret Wikipedia article!</h2>
+          <p style="margin:0; font-size:0.92rem;">Slide tools unlock when the reading timer finishes (or everyone clicks Ready).</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button id="reroll-wiki-btn" class="bump-btn sm white" onclick="rerollMyArticle()">🎲 Reroll Page (1 left)</button>
+          <button id="ready-read-btn" class="bump-btn" onclick="toggleReadyState()">✅ I'm Ready!</button>
+        </div>
+      </div>
+
+      <div class="wiki-viewer" style="height:calc(100vh - 235px); min-height:460px;">
+        <div class="wiki-header-bar">
+          <strong id="read-wiki-title">Loading random Wikipedia article...</strong>
+          <span class="badge-tag" id="read-ready-counter">0/1 Ready</span>
+        </div>
+        <div id="read-wiki-body" class="wiki-content-scroll"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCREEN 3: POWERPOINT BUILDER ==================== -->
+  <section id="screen-building" class="screen">
+    <div class="builder-layout">
+      <!-- Left: Embedded Draggable Wikipedia Article -->
+      <div class="wiki-viewer">
+        <div class="wiki-header-bar">
+          <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+            <span>📖</span>
+            <strong id="build-wiki-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Article</strong>
+          </div>
+          <span class="badge-tag" style="background:var(--lime); flex-shrink:0;">Drag text/imgs ➡️</span>
+        </div>
+        <div id="build-wiki-body" class="wiki-content-scroll"></div>
+      </div>
+
+      <!-- Right: Bump PowerPoint Studio -->
+      <div class="ppt-studio">
+        <!-- Main Toolbar -->
+        <div class="ppt-toolbar">
+          <button class="tool-btn" onclick="addTextBox()">🔤 Text</button>
+
+          <select id="shape-picker" class="tool-btn" onchange="if(this.value){addShape(this.value); this.value='';}">
+            <option value="">🔷 + Shape</option>
+            <option value="rect">▬ Rectangle</option>
+            <option value="pill">💊 Rounded Pill</option>
+            <option value="circle">🟡 Circle</option>
+            <option value="star">💥 Starburst</option>
+            <option value="bubble">💬 Speech Bubble</option>
+            <option value="arrow">➡️ Big Arrow</option>
+            <option value="triangle">🔺 Triangle</option>
+          </select>
+
+          <button id="btn-draw-mode" class="tool-btn" onclick="toggleDrawMode()">✏️ Draw</button>
+          <button class="tool-btn" onclick="openModal('modal-stickers')">🏷️ Stickers</button>
+          <button class="tool-btn" onclick="openModal('modal-gifs')">👾 GIFs</button>
+          <button class="tool-btn" style="background:var(--cyan);" onclick="openModal('modal-music')">🎵 YT Music</button>
+
+          <div style="margin-left:auto; display:flex; gap:6px;">
+            <button class="tool-btn" onclick="exportCurrentDeckAsPNGs()" title="Download all slides as PNGs">📸 PNGs</button>
+            <button id="btn-finish-deck" class="bump-btn sm" onclick="markDeckFinished()">✅ Done!</button>
+          </div>
+        </div>
+
+        <!-- Contextual Element / Drawing / Slide Style Sub-bar -->
+        <div class="ppt-subbar" id="ppt-subbar">
+          <!-- Slide Background Controls -->
+          <span style="font-weight:700;">Slide BG:</span>
+          <input type="color" id="slide-bg-color" value="#ffffff" onchange="updateSlideBgColor(this.value)" title="Slide Background Color" style="width:28px; height:28px; border:2px solid #141416; border-radius:8px; cursor:pointer;" />
+          <select id="slide-bg-pattern" onchange="updateSlideBgPattern(this.value)" style="border:2px solid #141416; border-radius:8px; padding:3px 6px; font-weight:700;">
+            <option value="">Solid</option>
+            <option value="bg-dots">Dots</option>
+            <option value="bg-grid">Grid</option>
+            <option value="bg-sunset">Sunset</option>
+            <option value="bg-cyber">Cyber Dark</option>
+          </select>
+
+          <span style="color:#ccc;">|</span>
+
+          <!-- Drawing Controls (shown when drawing active) -->
+          <div id="draw-controls" style="display:none; align-items:center; gap:6px;">
+            <span style="font-weight:700; color:var(--coral);">Brush:</span>
+            <input type="color" id="draw-color" value="#FF5C5C" style="width:26px; height:26px; border:2px solid #141416; border-radius:6px;" />
+            <input type="range" id="draw-size" min="2" max="24" value="6" style="width:70px;" />
+            <button class="tool-btn" onclick="clearSlideDrawing()">🧹 Clear Ink</button>
+          </div>
+
+          <!-- Selected Element Controls -->
+          <div id="el-controls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap;">
+            <select id="el-font" onchange="updateSelectedElStyle('font', this.value)" style="border:2px solid #141416; border-radius:8px; padding:3px 6px; font-weight:700;">
+              <option value="Fredoka">Fredoka</option>
+              <option value="Space Grotesk">Space Grotesk</option>
+              <option value="Bangers">Bangers (Comic)</option>
+              <option value="Playfair Display">Playfair (Wiki)</option>
+              <option value="Caveat">Caveat (Hand)</option>
+              <option value="JetBrains Mono">Mono</option>
+            </select>
+            <input type="color" id="el-color" value="#141416" onchange="updateSelectedElStyle('color', this.value)" title="Color" style="width:26px; height:26px; border:2px solid #141416; border-radius:6px;" />
+            <input type="color" id="el-fill" value="#C6FF33" onchange="updateSelectedElStyle('fill', this.value)" title="Fill / Highlight" style="width:26px; height:26px; border:2px solid #141416; border-radius:6px;" />
+            <button class="tool-btn" onclick="updateSelectedElStyle('fontSize', 4)">A+</button>
+            <button class="tool-btn" onclick="updateSelectedElStyle('fontSize', -4)">A-</button>
+            <button class="tool-btn" onclick="bringSelectedForward()">⬆️</button>
+            <button class="tool-btn" onclick="deleteSelectedElement()" style="background:var(--coral); color:#fff;">🗑️</button>
+          </div>
+        </div>
+
+        <!-- 16:9 Slide Stage -->
+        <div class="stage-wrapper" onclick="deselectAllElements(event)">
+          <div id="editor-stage" class="slide-canvas-box"
+               ondragover="handleStageDragOver(event)"
+               ondragleave="handleStageDragLeave(event)"
+               ondrop="handleStageDrop(event)">
+            <div id="editor-elements-layer" style="position:absolute; inset:0;"></div>
+            <canvas id="draw-layer" width="960" height="540"></canvas>
+          </div>
+        </div>
+
+        <!-- Slide Filmstrip -->
+        <div class="slide-strip" id="slide-strip"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCREEN 4: LIVE PRESENTATION STAGE ==================== -->
+  <section id="screen-presenting" class="screen">
+    <div style="max-width:1050px; margin:0 auto;">
+      <!-- Presenter Header Banner -->
+      <div class="bump-card" style="background:var(--violet); color:#fff; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div id="pres-avatar" class="player-avatar-circle" style="background:var(--lime); color:#141416; width:56px; height:56px; font-size:1.8rem;">🦊</div>
+          <div>
+            <span class="badge-tag" style="background:var(--yellow); color:#141416;">NOW PRESENTING (<span id="pres-order-num">1/1</span>)</span>
+            <h2 style="margin:4px 0 0; font-size:1.6rem;"><span id="pres-name">Player</span> — "<span id="pres-topic">Topic</span>"</h2>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="bump-pill" style="color:#141416;">Slide <strong id="pres-slide-indicator">1 / 1</strong></span>
+          <button class="bump-btn sm white" onclick="exportPresentedDeckAsPNGs()">📸 Save PNGs</button>
+        </div>
+      </div>
+
+      <!-- Synchronized Presentation Stage -->
+      <div style="display:flex; justify-content:center;">
+        <div id="present-stage" class="slide-canvas-box" style="max-width:920px;" onmousemove="handlePresenterLaserMove(event)" onmouseleave="hidePresenterLaser()">
+          <div id="present-elements-layer" style="position:absolute; inset:0;"></div>
+          <canvas id="present-draw-canvas" width="960" height="540" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:15;"></canvas>
+          <div id="present-laser-dot" class="laser-dot"></div>
+        </div>
+      </div>
+
+      <!-- Controls Bar: Presenter Navigation OR Audience Live Reactions -->
+      <div id="presenter-controls-bar" class="bump-card" style="display:none; margin-top:16px; background:var(--lime); justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:10px;">
+          <button class="bump-btn white" onclick="presenterChangeSlide(-1)">⬅️ Prev Slide</button>
+          <button class="bump-btn yellow" onclick="presenterChangeSlide(1)">Next Slide ➡️</button>
+        </div>
+        <span style="font-weight:700;">💡 Move mouse over slide for live Laser Pointer!</span>
+        <button class="bump-btn coral" onclick="presenterFinishPitch()">🎤 Finish Pitch &amp; Open Voting!</button>
+      </div>
+
+      <div id="audience-reactions-bar" class="bump-card" style="display:none; margin-top:16px; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px;">
+        <span style="font-weight:700;">Live Reactions:</span>
+        <button class="bump-btn sm white" onclick="sendReaction('👏')">👏 Clap</button>
+        <button class="bump-btn sm white" onclick="sendReaction('😂')">😂 LOL</button>
+        <button class="bump-btn sm white" onclick="sendReaction('🔥')">🔥 Fire</button>
+        <button class="bump-btn sm white" onclick="sendReaction('🤯')">🤯 Mind Blown</button>
+        <button class="bump-btn sm white" onclick="sendReaction('💀')">💀 Dead</button>
+        <button id="host-force-end-pitch" class="bump-btn sm coral" style="display:none; margin-left:auto;" onclick="presenterFinishPitch()">End Pitch ⏭</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCREEN 5: VOTING PHASE ==================== -->
+  <section id="screen-voting" class="screen">
+    <div class="bump-card" style="max-width:680px; margin:24px auto; text-align:center;">
+      <span class="badge-tag" style="background:var(--coral); color:#fff;">AUDIENCE SCORE</span>
+      <h1 style="font-size:2.2rem; margin:10px 0 6px;">Rate <span id="vote-presenter-name">Player</span>'s Pitch!</h1>
+      <p id="vote-topic-sub" style="color:#555; font-weight:700; margin:0 0 16px;">Topic</p>
+
+      <div id="voter-pad-container">
+        <div class="vote-grid" id="vote-buttons-grid"></div>
+        <p id="vote-flavor-text" style="font-weight:700; min-height:24px; color:var(--violet);">Tap a score from 1 to 10!</p>
+      </div>
+
+      <div id="presenter-voting-wait" style="display:none; padding:24px;">
+        <div style="font-size:3.5rem; margin-bottom:10px;">🙈</div>
+        <h3>You are in the hot seat!</h3>
+        <p>Your friends are locking in their 1–10 scores right now...</p>
+      </div>
+
+      <div class="bump-pill" style="background:var(--muted); margin-top:10px;">
+        Votes locked in: <strong id="votes-progress-count">0 / 0</strong>
+      </div>
+      <div style="margin-top:14px;">
+        <button id="host-reveal-now-btn" class="bump-btn yellow" style="display:none;" onclick="hostTriggerReveal()">🎬 Reveal Votes Now!</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCREEN 6: TV-SHOW VOTE REVEAL ==================== -->
+  <section id="screen-reveal" class="screen">
+    <div class="tv-arena" style="max-width:920px; margin:18px auto;">
+      <div class="tv-spotlight"></div>
+      <span class="badge-tag" style="background:var(--lime); color:#141416;">📺 LIVE SCOREBOARD REVEAL</span>
+      <h1 style="font-size:2.4rem; margin:10px 0 4px;" id="reveal-presenter-title">Player's Results</h1>
+      <p style="color:#ccc; margin:0;" id="reveal-article-title">Article</p>
+
+      <div id="reveal-cards-row" class="reveal-cards-row"></div>
+
+      <div style="margin-top:10px;">
+        <div style="font-size:0.9rem; letter-spacing:2px; text-transform:uppercase; color:var(--cyan); font-weight:700;">TOTAL SCORE</div>
+        <div id="reveal-odometer" class="big-odometer">0</div>
+        <div id="reveal-avg-badge" class="bump-pill" style="background:var(--violet); color:#fff;">Average: 0.0 / 10</div>
+      </div>
+
+      <div style="margin-top:26px;">
+        <button id="host-after-reveal-btn" class="bump-btn" style="display:none; font-size:1.15rem; padding:15px 30px;" onclick="hostAdvanceAfterReveal()">
+          ➡️ Next Presenter
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCREEN 7: GRAND FINALE PODIUM ==================== -->
+  <section id="screen-podium" class="screen">
+    <div style="max-width:980px; margin:10px auto; text-align:center;">
+      <div class="bump-pill" style="background:var(--yellow);">🏆 FINAL STANDINGS</div>
+      <h1 style="font-size:2.8rem; margin:8px 0;">WikiPitch Champions!</h1>
+
+      <div id="podium-stage" class="podium-stage"></div>
+
+      <!-- Full Leaderboard & PNG Export Gallery -->
+      <div class="bump-card" style="text-align:left; margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+          <h2 style="margin:0;">📊 Full Leaderboard &amp; Slide Decks</h2>
+          <button id="host-play-again-btn" class="bump-btn" style="display:none;" onclick="hostResetToLobby()">🔄 Play Another Round</button>
+        </div>
+        <div id="podium-full-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MODALS (STICKERS, GIFS, YOUTUBE MUSIC) ==================== -->
+  <!-- Stickers Modal -->
+  <div id="modal-stickers" class="drawer-modal" onclick="if(event.target===this) closeModal('modal-stickers')">
+    <div class="drawer-box">
+      <div style="padding:14px 18px; background:var(--lime); border-bottom:var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">🏷️ Bump Sticker Pack</h3>
+        <button class="bump-btn sm white" onclick="closeModal('modal-stickers')">✕</button>
+      </div>
+      <div id="sticker-grid" class="sticker-grid"></div>
+    </div>
+  </div>
+
+  <!-- GIFs Modal -->
+  <div id="modal-gifs" class="drawer-modal" onclick="if(event.target===this) closeModal('modal-gifs')">
+    <div class="drawer-box">
+      <div style="padding:14px 18px; background:var(--pink); border-bottom:var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">👾 Add Animated GIF</h3>
+        <button class="bump-btn sm white" onclick="closeModal('modal-gifs')">✕</button>
+      </div>
+      <div style="padding:14px; border-bottom:2px solid #eee; display:flex; gap:8px;">
+        <input id="gif-search-input" class="bump-input" placeholder="Search Wikimedia GIFs or paste any .gif URL..." onkeydown="if(event.key==='Enter') searchOrAddGif()" />
+        <button class="bump-btn sm" onclick="searchOrAddGif()">Search / Add</button>
+      </div>
+      <div id="gif-results-grid" class="sticker-grid" style="grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));"></div>
+    </div>
+  </div>
+
+  <!-- YouTube Music Modal -->
+  <div id="modal-music" class="drawer-modal" onclick="if(event.target===this) closeModal('modal-music')">
+    <div class="drawer-box">
+      <div style="padding:14px 18px; background:var(--cyan); border-bottom:var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">🎵 Presentation Background Music (YouTube)</h3>
+        <button class="bump-btn sm white" onclick="closeModal('modal-music')">✕</button>
+      </div>
+      <div style="padding:18px; overflow-y:auto;">
+        <label style="font-weight:700; display:block; margin-bottom:6px;">Paste any YouTube Link or Video ID</label>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input id="yt-url-input" class="bump-input" placeholder="https://www.youtube.com/watch?v=..." />
+          <input id="yt-start-sec" class="bump-input" type="number" min="0" value="0" style="width:95px;" title="Start at second" placeholder="Sec" />
+          <button class="bump-btn sm" onclick="applyCustomYoutube()">Set &amp; Test</button>
+        </div>
+
+        <p style="font-weight:700; margin:14px 0 8px;">⚡ Or pick an instant presentation vibe:</p>
+        <div id="yt-presets-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div>
+
+        <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; background:var(--muted); padding:10px 14px; border-radius:14px; border:2px solid #141416;">
+          <span>Selected: <strong id="yt-selected-title">None</strong></span>
+          <button class="bump-btn sm coral" onclick="clearYoutubeTrack()">Remove Music</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================================
+   1. SOUND SYNTHESIZER (Tactile Bump Pop Effects, Drumroll, Fanfare)
+   ============================================================================ */
+let sfxEnabled = true;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function toggleSoundFX() {
+  sfxEnabled = !sfxEnabled;
+  document.getElementById('sound-toggle-btn').textContent = sfxEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
+  if (sfxEnabled) playPop(520);
+}
+
+function playPop(freq = 440, duration = 0.08, type = 'sine') {
+  if (!sfxEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.45, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(0.16, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {}
+}
+
+function playTick(urgent = false) {
+  playPop(urgent ? 880 : 600, 0.05, 'triangle');
+}
+
+function playVoteFlip(score) {
+  if (!sfxEnabled) return;
+  const base = 320 + score * 48;
+  playPop(base, 0.16, 'triangle');
+  if (score >= 9) {
+    setTimeout(() => playPop(base * 1.25, 0.2, 'sine'), 90);
+    setTimeout(() => playPop(base * 1.5, 0.28, 'sine'), 180);
+  }
+}
+
+function playDrumroll(durationMs = 1800) {
+  if (!sfxEnabled) return;
+  const steps = 18;
+  for (let i = 0; i < steps; i++) {
+    setTimeout(() => playPop(150 + i * 14, 0.05, 'triangle'), (durationMs / steps) * i);
+  }
+}
+
+function playFanfare() {
+  if (!sfxEnabled) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((n, idx) => {
+    setTimeout(() => playPop(n, 0.26, 'triangle'), idx * 110);
+  });
+}
+
+/* ============================================================================
+   2. YOUTUBE IFRAME BACKGROUND MUSIC CONTROLLER
+   ============================================================================ */
+let ytPlayer = null;
+let ytReady = false;
+let ytMuted = false;
+let currentPlayingYtId = null;
+
+const YT_PRESETS = [
+  { title: '☕ Wii Shop Bossa Nova', id: 'u3pQv9mmZMk', start: 0 },
+  { title: '🎷 Elevator Jazz Loop', id: 'xy_NKN75Jhw', start: 0 },
+  { title: '🎻 Dramatic Symphony', id: 'GRxofEmo3HA', start: 0 },
+  { title: '🔥 Epic Trailer Drums', id: 'LRLdhFVzqt4', start: 10 },
+  { title: '📚 Chill Lo-Fi Beats', id: 'jfKfPfyJRdk', start: 0 },
+  { title: '🕹️ 8-Bit Arcade Rush', id: '1G4isv_Fylg', start: 0 }
+];
+
+// Load YouTube IFrame API asynchronously
+(function loadYT() {
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+})();
+
+window.onYouTubeIframeAPIReady = function() {
+  ytPlayer = new YT.Player('yt-player', {
+    height: '150',
+    width: '260',
+    videoId: '',
+    playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, playsinline: 1 },
+    events: {
+      onReady: () => { ytReady = true; },
+      onError: (e) => {
+        console.warn('YouTube embed error:', e.data);
+        alert('Note: That YouTube video disables external embedding (Error ' + e.data + '). Try another video or pick one of the preset tracks!');
+      }
+    }
+  });
+};
+
+function parseYoutubeId(input) {
+  if (!input) return null;
+  input = input.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+  const m = input.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function playYoutubeMusic(videoId, startSec = 0, label = 'YouTube Track') {
+  const badge = document.getElementById('music-now-playing');
+  if (!videoId) {
+    stopYoutubeMusic();
+    return;
+  }
+  badge.style.display = 'inline-flex';
+  document.getElementById('music-track-label').textContent = label;
+  currentPlayingYtId = videoId;
+  if (ytReady && ytPlayer && ytPlayer.loadVideoById) {
+    ytPlayer.loadVideoById({ videoId: videoId, startSeconds: Number(startSec) || 0 });
+    ytPlayer.setVolume(ytMuted ? 0 : 45);
+  }
+}
+
+function stopYoutubeMusic() {
+  currentPlayingYtId = null;
+  document.getElementById('music-now-playing').style.display = 'none';
+  if (ytReady && ytPlayer && ytPlayer.stopVideo) {
+    try { ytPlayer.stopVideo(); } catch (e) {}
+  }
+}
+
+function toggleMusicMute() {
+  ytMuted = !ytMuted;
+  document.getElementById('music-mute-btn').textContent = ytMuted ? '🔇' : '🔊';
+  if (ytReady && ytPlayer) {
+    if (ytMuted) ytPlayer.mute();
+    else { ytPlayer.unMute(); ytPlayer.setVolume(45); }
+  }
+}
+
+/* ============================================================================
+   3. GAME STATE & PEERJS P2P MULTIPLAYER ENGINE
+   ============================================================================ */
+const AVATARS = ['🦊', '🐸', '🐙', '🦖', '🦄', '🐼', '🐯', '👽', '🤖', '🐧', '🦆', '🐝'];
+const BADGE_COLORS = ['#C6FF33', '#9D7BFF', '#FF5C5C', '#4DEEEA', '#FFE600', '#FF85E4'];
+const ROOM_PREFIX = 'wikipitch-gh-2026-';
+
+let myId = 'p_' + Math.random().toString(36).slice(2, 9);
+let myProfile = {
+  id: myId,
+  name: '',
+  avatar: AVATARS[0],
+  color: BADGE_COLORS[0]
+};
+
+let isHost = false;
+let roomCode = '';
+let peer = null;
+let hostConn = null;          // Client -> Host connection
+let clientConns = {};         // Host -> Clients map { peerId: DataConnection }
+let localTimerInterval = null;
+
+// Authoritative Game State (Synced from Host to all Clients)
+let gameState = {
+  phase: 'LOBBY', // LOBBY | READING | BUILDING | PRESENTING | VOTING | REVEAL | PODIUM
+  settings: {
+    lang: 'en',
+    readTime: 90,
+    buildTime: 240
+  },
+  phaseEndTime: 0,
+  players: {},        // { id: { id, name, avatar, color, isHost, ready, article, rerolled, deck, music, totalScore } }
+  presentOrder: [],   // [playerId, ...]
+  currentPresIdx: 0,
+  currentSlideIdx: 0,
+  votes: {},          // { presenterId: { voterId: number } }
+  revealStep: 0
+};
+
+// Initialize Avatar Picker & Presets on Load
+window.addEventListener('DOMContentLoaded', () => {
+  const picker = document.getElementById('avatar-picker');
+  AVATARS.forEach((emo, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'avatar-opt' + (i === 0 ? ' selected' : '');
+    btn.textContent = emo;
+    btn.onclick = () => {
+      document.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+      btn.classList.add('selected');
+      myProfile.avatar = emo;
+      myProfile.color = BADGE_COLORS[i % BADGE_COLORS.length];
+      playPop(500);
+    };
+    picker.appendChild(btn);
+  });
+
+  // Check URL ?room=XXXX query param
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlRoom = urlParams.get('room');
+  if (urlRoom) {
+    document.getElementById('input-room-code').value = urlRoom.toUpperCase().slice(0, 4);
+  }
+
+  initStickerAndGifLibraries();
+  initYtPresets();
+  initDrawCanvas();
+  initVoteButtons();
+});
+
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 4; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function getNicknameOrDefault() {
+  const val = document.getElementById('input-nickname').value.trim();
+  if (val) return val;
+  const fallback = 'WikiPlayer' + Math.floor(10 + Math.random() * 89);
+  document.getElementById('input-nickname').value = fallback;
+  return fallback;
+}
+
+/* ---------- HOST ROOM ---------- */
+function createRoom() {
+  myProfile.name = getNicknameOrDefault();
+  isHost = true;
+  roomCode = generateRoomCode();
+  const statusEl = document.getElementById('lobby-status-msg');
+  statusEl.style.color = 'var(--ink)';
+  statusEl.textContent = 'Creating P2P room...';
+
+  peer = new Peer(ROOM_PREFIX + roomCode);
+
+  peer.on('open', () => {
+    playFanfare();
+    statusEl.textContent = '';
+    gameState.players[myId] = {
+      ...myProfile,
+      isHost: true,
+      ready: false,
+      article: null,
+      rerolled: false,
+      deck: createDefaultDeck(myProfile.name),
+      music: null,
+      totalScore: 0
+    };
+    enterWaitingLobby();
+    broadcastState();
+  });
+
+  peer.on('connection', (conn) => {
+    conn.on('data', (msg) => handleHostMessage(conn, msg));
+    conn.on('close', () => {
+      if (conn.playerId && gameState.players[conn.playerId]) {
+        delete clientConns[conn.playerId];
+        delete gameState.players[conn.playerId];
+        broadcastState();
+      }
+    });
+  });
+
+  peer.on('error', (err) => {
+    statusEl.style.color = 'var(--coral)';
+    statusEl.textContent = 'Connection error: ' + err.type + '. Try again!';
+  });
+}
+
+/* ---------- JOIN ROOM ---------- */
+function joinRoom() {
+  const codeInput = document.getElementById('input-room-code').value.trim().toUpperCase();
+  const statusEl = document.getElementById('lobby-status-msg');
+  if (codeInput.length !== 4) {
+    statusEl.style.color = 'var(--coral)';
+    statusEl.textContent = 'Enter a 4-letter Room Code!';
+    return;
+  }
+
+  myProfile.name = getNicknameOrDefault();
+  isHost = false;
+  roomCode = codeInput;
+  statusEl.style.color = 'var(--ink)';
+  statusEl.textContent = 'Connecting to room ' + roomCode + '...';
+
+  peer = new Peer();
+  peer.on('open', () => {
+    hostConn = peer.connect(ROOM_PREFIX + roomCode, { reliable: true });
+    hostConn.on('open', () => {
+      playPop(620);
+      statusEl.textContent = '';
+      hostConn.send({ type: 'JOIN', profile: myProfile });
+      enterWaitingLobby();
+      // Keepalive heartbeat
+      setInterval(() => {
+        if (hostConn && hostConn.open) hostConn.send({ type: 'PING' });
+      }, 5000);
+    });
+    hostConn.on('data', (msg) => handleClientMessage(msg));
+    hostConn.on('close', () => {
+      alert('Disconnected from host!');
+      location.reload();
+    });
+  });
+
+  peer.on('error', () => {
+    statusEl.style.color = 'var(--coral)';
+    statusEl.textContent = 'Room "' + roomCode + '" not found. Check the code!';
+  });
+}
+
+function enterWaitingLobby() {
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('room-waiting-panel').style.display = 'block';
+  document.getElementById('hud-room-badge').style.display = 'inline-flex';
+  document.getElementById('hud-room-code').textContent = roomCode;
+  document.getElementById('host-start-area').style.display = isHost ? 'block' : 'none';
+  document.getElementById('guest-wait-area').style.display = isHost ? 'none' : 'block';
+  document.getElementById('setting-lang').disabled = !isHost;
+  document.getElementById('setting-read-time').disabled = !isHost;
+  document.getElementById('setting-build-time').disabled = !isHost;
+  renderLobbyPlayers();
+}
+
+function copyInviteLink() {
+  const url = new URL(window.location.href);
+  url.searchParams.set('room', roomCode);
+  navigator.clipboard.writeText(url.toString());
+  playPop(700);
+  alert('Invite link copied! Share it with your friends:\n' + url.toString());
+}
+
+/* ---------- MESSAGE ROUTING (HOST & CLIENT) ---------- */
+function sendToHost(payload) {
+  if (isHost) {
+    handleHostMessage(null, payload);
+  } else if (hostConn && hostConn.open) {
+    hostConn.send(payload);
+  }
+}
+
+function broadcastState() {
+  if (!isHost) return;
+  const packet = { type: 'STATE_SYNC', state: gameState };
+  Object.values(clientConns).forEach(c => {
+    if (c.open) c.send(packet);
+  });
+  applyGameState(gameState);
+}
+
+function broadcastEphemeral(packet) {
+  if (isHost) {
+    Object.values(clientConns).forEach(c => { if (c.open) c.send(packet); });
+    handleEphemeral(packet);
+  } else if (hostConn && hostConn.open) {
+    hostConn.send(packet);
+  }
+}
+
+function handleHostMessage(conn, msg) {
+  if (!isHost) return;
+  switch (msg.type) {
+    case 'PING': break;
+    case 'JOIN': {
+      const p = msg.profile;
+      if (conn) {
+        conn.playerId = p.id;
+        clientConns[p.id] = conn;
+      }
+      gameState.players[p.id] = {
+        ...p,
+        isHost: false,
+        ready: false,
+        article: null,
+        rerolled: false,
+        deck: createDefaultDeck(p.name),
+        music: null,
+        totalScore: 0
+      };
+      broadcastState();
+      break;
+    }
+    case 'PLAYER_READY': {
+      const pl = gameState.players[msg.playerId];
+      if (pl) {
+        pl.ready = msg.ready;
+        if (msg.deck) pl.deck = msg.deck;
+        if (msg.music !== undefined) pl.music = msg.music;
+        // Check if ALL players are ready
+        const allPlayers = Object.values(gameState.players);
+        if (allPlayers.length > 0 && allPlayers.every(x => x.ready)) {
+          hostAdvancePhase();
+        } else {
+          broadcastState();
+        }
+      }
+      break;
+    }
+    case 'SYNC_DECK': {
+      const pl = gameState.players[msg.playerId];
+      if (pl) {
+        pl.deck = msg.deck;
+        pl.music = msg.music;
+      }
+      break;
+    }
+    case 'SET_ARTICLE': {
+      const pl = gameState.players[msg.playerId];
+      if (pl) {
+        pl.article = msg.article;
+        if (msg.rerolled) pl.rerolled = true;
+        broadcastState();
+      }
+      break;
+    }
+    case 'SLIDE_CHANGE': {
+      gameState.currentSlideIdx = msg.slideIdx;
+      broadcastState();
+      break;
+    }
+    case 'FINISH_PITCH': {
+      const presId = gameState.presentOrder[gameState.currentPresIdx];
+      gameState.phase = 'VOTING';
+      gameState.votes[presId] = {};
+      // If solo player (1 player in room), auto-generate fun bot audience scores so solo testing works!
+      const ids = Object.keys(gameState.players);
+      if (ids.length === 1) {
+        gameState.votes[presId]['bot_judge_1'] = Math.floor(7 + Math.random() * 4);
+        gameState.votes[presId]['bot_judge_2'] = Math.floor(6 + Math.random() * 5);
+        gameState.votes[presId]['bot_judge_3'] = Math.floor(8 + Math.random() * 3);
+      }
+      broadcastState();
+      break;
+    }
+    case 'CAST_VOTE': {
+      const presId = gameState.presentOrder[gameState.currentPresIdx];
+      if (!gameState.votes[presId]) gameState.votes[presId] = {};
+      gameState.votes[presId][msg.voterId] = msg.score;
+
+      const expectedVoters = Object.keys(gameState.players).filter(id => id !== presId).length;
+      const currentVotes = Object.keys(gameState.votes[presId]).length;
+      if (expectedVoters > 0 && currentVotes >= expectedVoters) {
+        hostTriggerReveal();
+      } else {
+        broadcastState();
+      }
+      break;
+    }
+    case 'LASER':
+    case 'REACTION': {
+      // Relay to all clients + apply on host
+      Object.values(clientConns).forEach(c => { if (c.open) c.send(msg); });
+      handleEphemeral(msg);
+      break;
+    }
+  }
+}
+
+function handleClientMessage(msg) {
+  if (msg.type === 'STATE_SYNC') {
+    gameState = msg.state;
+    applyGameState(gameState);
+  } else if (msg.type === 'LASER' || msg.type === 'REACTION') {
+    handleEphemeral(msg);
+  }
+}
+
+/* ============================================================================
+   4. WIKIPEDIA RANDOM ARTICLE FETCHER (CORS-Enabled MediaWiki API)
+   ============================================================================ */
+async function fetchRandomWikipediaArticle(lang = 'en') {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const summaryRes = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
+      const summary = await summaryRes.json();
+      if (!summary || !summary.title || summary.type !== 'standard') continue;
+
+      const parseUrl = `https://${lang}.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(summary.title)}&prop=text&disableeditsection=1&format=json&origin=*`;
+      const parseRes = await fetch(parseUrl);
+      const parseData = await parseRes.json();
+      let rawHtml = parseData?.parse?.text?.['*'] || `<p>${summary.extract}</p>`;
+
+      // Clean relative Wikipedia links & protocol-less image URLs
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(rawHtml, 'text/html');
+      doc.querySelectorAll('script, style, .mw-empty-elt, .hatnote, .shortdescription, .ambox').forEach(el => el.remove());
+      doc.querySelectorAll('a').forEach(a => {
+        a.removeAttribute('href');
+        a.style.color = '#141416';
+        a.style.textDecoration = 'underline dotted';
+      });
+      doc.querySelectorAll('img').forEach(img => {
+        let src = img.getAttribute('src') || '';
+        if (src.startsWith('//')) src = 'https:' + src;
+        // Prefer larger clean thumbnail if tiny
+        img.setAttribute('src', src);
+        img.setAttribute('draggable', 'true');
+        img.setAttribute('crossorigin', 'anonymous');
+      });
+
+      const cleanBody = doc.body.innerHTML;
+      if (cleanBody.length < 350) continue; // Skip stub pages
+
+      return {
+        title: summary.title,
+        extract: summary.extract || '',
+        thumbnail: summary.thumbnail?.source || null,
+        html: cleanBody,
+        lang
+      };
+    } catch (e) {
+      console.warn('Wiki fetch retry:', e);
+    }
+  }
+  return {
+    title: 'The Great Emu War',
+    extract: 'The Emu War was a nuisance wildlife management military operation undertaken in Australia over the late part of 1932.',
+    thumbnail: null,
+    html: '<h1>The Great Emu War</h1><p>The Emu War, also known as the Great Emu War, was a nuisance wildlife management military operation undertaken in Australia over the late part of 1932 to address public concern over the number of emus said to be running amok in the Campion district of Western Australia.</p>',
+    lang
+  };
+}
+
+async function assignMyArticle(isReroll = false) {
+  const lang = gameState.settings.lang || 'en';
+  document.getElementById('read-wiki-title').textContent = 'Fetching random Wikipedia page...';
+  document.getElementById('read-wiki-body').innerHTML = '<div style="padding:40px; text-align:center; font-size:1.3rem;">🎲 Spinning the Wikipedia globe...</div>';
+  const article = await fetchRandomWikipediaArticle(lang);
+  sendToHost({ type: 'SET_ARTICLE', playerId: myId, article, rerolled: isReroll });
+}
+
+function rerollMyArticle() {
+  const me = gameState.players[myId];
+  if (!me || me.rerolled) return;
+  playPop(680);
+  document.getElementById('reroll-wiki-btn').disabled = true;
+  document.getElementById('reroll-wiki-btn').textContent = '🎲 Reroll Used';
+  assignMyArticle(true);
+}
+
+/* ============================================================================
+   5. PHASE TRANSITIONS & SYNCHRONIZED STATE RENDERER
+   ============================================================================ */
+let lastRenderedPhase = null;
+let lastRenderedPresIdx = -1;
+let lastRevealedKey = '';
+
+function syncHostSettings() {
+  if (!isHost) return;
+  gameState.settings.lang = document.getElementById('setting-lang').value;
+  gameState.settings.readTime = Number(document.getElementById('setting-read-time').value);
+  gameState.settings.buildTime = Number(document.getElementById('setting-build-time').value);
+  broadcastState();
+}
+
+function hostStartGame() {
+  if (!isHost) return;
+  playFanfare();
+  Object.values(gameState.players).forEach(p => {
+    p.ready = false;
+    p.article = null;
+    p.rerolled = false;
+    p.totalScore = 0;
+    p.deck = createDefaultDeck(p.name);
+  });
+  gameState.votes = {};
+  gameState.phase = 'READING';
+  gameState.phaseEndTime = Date.now() + gameState.settings.readTime * 1000;
+  broadcastState();
+}
+
+function hostForceNextPhase() {
+  if (!isHost) return;
+  playPop(700);
+  hostAdvancePhase();
+}
+
+function hostAdvancePhase() {
+  if (!isHost) return;
+  if (gameState.phase === 'READING') {
+    Object.values(gameState.players).forEach(p => p.ready = false);
+    gameState.phase = 'BUILDING';
+    gameState.phaseEndTime = Date.now() + gameState.settings.buildTime * 1000;
+    broadcastState();
+  } else if (gameState.phase === 'BUILDING') {
+    // Shuffle presentation order
+    const ids = Object.keys(gameState.players);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    gameState.presentOrder = ids;
+    gameState.currentPresIdx = 0;
+    gameState.currentSlideIdx = 0;
+    gameState.phase = 'PRESENTING';
+    gameState.phaseEndTime = 0;
+    broadcastState();
+  }
+}
+
+function hostTriggerReveal() {
+  if (!isHost) return;
+  const presId = gameState.presentOrder[gameState.currentPresIdx];
+  const voteMap = gameState.votes[presId] || {};
+  const scores = Object.values(voteMap);
+  const sum = scores.reduce((a, b) => a + b, 0);
+  if (gameState.players[presId]) {
+    gameState.players[presId].totalScore = sum;
+  }
+  gameState.phase = 'REVEAL';
+  broadcastState();
+}
+
+function hostAdvanceAfterReveal() {
+  if (!isHost) return;
+  if (gameState.currentPresIdx + 1 < gameState.presentOrder.length) {
+    gameState.currentPresIdx++;
+    gameState.currentSlideIdx = 0;
+    gameState.phase = 'PRESENTING';
+    broadcastState();
+  } else {
+    gameState.phase = 'PODIUM';
+    broadcastState();
+  }
+}
+
+function hostResetToLobby() {
+  if (!isHost) return;
+  gameState.phase = 'LOBBY';
+  gameState.phaseEndTime = 0;
+  broadcastState();
+}
+
+function toggleReadyState() {
+  const me = gameState.players[myId];
+  if (!me) return;
+  const nextReady = !me.ready;
+  playPop(nextReady ? 680 : 400);
+  sendToHost({ type: 'PLAYER_READY', playerId: myId, ready: nextReady });
+}
+
+function markDeckFinished() {
+  const me = gameState.players[myId];
+  if (!me) return;
+  const nextReady = !me.ready;
+  playPop(nextReady ? 720 : 420);
+  const btn = document.getElementById('btn-finish-deck');
+  btn.textContent = nextReady ? '⏳ Waiting...' : '✅ Done!';
+  btn.style.background = nextReady ? 'var(--yellow)' : 'var(--lime)';
+  sendToHost({
+    type: 'PLAYER_READY',
+    playerId: myId,
+    ready: nextReady,
+    deck: myDeck,
+    music: myMusic
+  });
+}
+
+function applyGameState(state) {
+  // Sync lobby selects for guests
+  if (!isHost) {
+    document.getElementById('setting-lang').value = state.settings.lang;
+    document.getElementById('setting-read-time').value = state.settings.readTime;
+    document.getElementById('setting-build-time').value = state.settings.buildTime;
+  }
+
+  // Update Top HUD
+  const phaseNames = {
+    LOBBY: 'Lobby',
+    READING: '📖 Reading Phase',
+    BUILDING: '🎨 Slide Studio',
+    PRESENTING: '🎤 Live Pitch',
+    VOTING: '🗳️ Voting',
+    REVEAL: '📺 Score Reveal',
+    PODIUM: '🏆 Podium'
+  };
+  document.getElementById('hud-phase-label').textContent = phaseNames[state.phase] || state.phase;
+
+  // Timer HUD visibility
+  const timerBox = document.getElementById('hud-timer-box');
+  if (state.phase === 'READING' || state.phase === 'BUILDING') {
+    timerBox.style.display = 'flex';
+    document.getElementById('hud-host-skip').style.display = isHost ? 'inline-flex' : 'none';
+    startLocalCountdown(state.phaseEndTime);
+  } else {
+    timerBox.style.display = 'none';
+    if (localTimerInterval) clearInterval(localTimerInterval);
+  }
+
+  // Show active screen
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const targetScreen = document.getElementById('screen-' + state.phase.toLowerCase());
+  if (targetScreen) targetScreen.classList.add('active');
+
+  const me = state.players[myId];
+
+  if (state.phase === 'LOBBY') {
+    stopYoutubeMusic();
+    renderLobbyPlayers();
+  }
+
+  if (state.phase === 'READING') {
+    stopYoutubeMusic();
+    if (lastRenderedPhase !== 'READING') {
+      document.getElementById('reroll-wiki-btn').disabled = false;
+      document.getElementById('reroll-wiki-btn').textContent = '🎲 Reroll Page (1 left)';
+      assignMyArticle(false);
+    }
+    if (me && me.article) {
+      document.getElementById('read-wiki-title').textContent = me.article.title;
+      if (document.getElementById('read-wiki-body').dataset.loadedTitle !== me.article.title) {
+        document.getElementById('read-wiki-body').innerHTML = me.article.html;
+        document.getElementById('read-wiki-body').dataset.loadedTitle = me.article.title;
+      }
+    }
+    const allP = Object.values(state.players);
+    const readyCount = allP.filter(p => p.ready).length;
+    document.getElementById('read-ready-counter').textContent = `${readyCount}/${allP.length} Ready`;
+    const rBtn = document.getElementById('ready-read-btn');
+    rBtn.textContent = me?.ready ? '⏳ Ready! (Click to undo)' : "✅ I'm Ready!";
+    rBtn.style.background = me?.ready ? 'var(--cyan)' : 'var(--lime)';
+  }
+
+  if (state.phase === 'BUILDING') {
+    if (lastRenderedPhase !== 'BUILDING') {
+      // Seed slide 1 with their Wikipedia title & thumbnail if deck is fresh
+      if (me && me.article && myDeck.slides[0].elements.length <= 1) {
+        myDeck.slides[0].elements[0].text = me.article.title;
+        if (me.article.thumbnail) {
+          myDeck.slides[0].elements.push({
+            id: 'el_' + Date.now(),
+            type: 'image',
+            src: me.article.thumbnail,
+            x: 540, y: 120, w: 320, h: 260, rot: 3
+          });
+        }
+      }
+      document.getElementById('btn-finish-deck').textContent = '✅ Done!';
+      document.getElementById('btn-finish-deck').style.background = 'var(--lime)';
+      renderSlideEditor();
+    }
+    if (me && me.article) {
+      document.getElementById('build-wiki-title').textContent = me.article.title;
+      const buildBody = document.getElementById('build-wiki-body');
+      if (buildBody.dataset.loadedTitle !== me.article.title) {
+        buildBody.innerHTML = me.article.html;
+        buildBody.dataset.loadedTitle = me.article.title;
+        attachWikiDragHandlers(buildBody);
+      }
+    }
+  }
+
+  if (state.phase === 'PRESENTING') {
+    // Ensure final deck is synced before presenting
+    if (lastRenderedPhase === 'BUILDING') {
+      sendToHost({ type: 'SYNC_DECK', playerId: myId, deck: myDeck, music: myMusic });
+    }
+    renderPresentationStage(state);
+  }
+
+  if (state.phase === 'VOTING') {
+    stopYoutubeMusic();
+    renderVotingScreen(state);
+  }
+
+  if (state.phase === 'REVEAL') {
+    renderTVRevealScreen(state);
+  }
+
+  if (state.phase === 'PODIUM') {
+    stopYoutubeMusic();
+    renderPodiumScreen(state);
+  }
+
+  lastRenderedPhase = state.phase;
+}
+
+function startLocalCountdown(endTime) {
+  if (localTimerInterval) clearInterval(localTimerInterval);
+  const timerEl = document.getElementById('hud-timer');
+  function update() {
+    const rem = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+    const mins = String(Math.floor(rem / 60)).padStart(2, '0');
+    const secs = String(rem % 60).padStart(2, '0');
+    timerEl.textContent = `${mins}:${secs}`;
+    if (rem <= 10 && rem > 0) {
+      timerEl.classList.add('urgent');
+      playTick(true);
+    } else {
+      timerEl.classList.remove('urgent');
+    }
+    if (rem === 0) {
+      clearInterval(localTimerInterval);
+      if (isHost) {
+        // Sync local deck first if building
+        if (gameState.phase === 'BUILDING' && gameState.players[myId]) {
+          gameState.players[myId].deck = myDeck;
+          gameState.players[myId].music = myMusic;
+        }
+        hostAdvancePhase();
+      } else if (gameState.phase === 'BUILDING') {
+        sendToHost({ type: 'SYNC_DECK', playerId: myId, deck: myDeck, music: myMusic });
+      }
+    }
+  }
+  update();
+  localTimerInterval = setInterval(update, 1000);
+}
+
+function renderLobbyPlayers() {
+  const list = document.getElementById('lobby-players-list');
+  const players = Object.values(gameState.players);
+  document.getElementById('lobby-player-count').textContent = players.length;
+  list.innerHTML = '';
+  players.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'player-bubble';
+    div.innerHTML = `
+      <div class="player-avatar-circle" style="background:${p.color}">${p.avatar}</div>
+      <div style="overflow:hidden;">
+        <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
+        <span class="badge-tag" style="background:${p.isHost ? 'var(--yellow)' : 'var(--muted)'};">${p.isHost ? '👑 HOST' : 'PLAYER'}</span>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+/* ============================================================================
+   6. DRAG & DROP FROM EMBEDDED WIKIPEDIA TO SLIDES
+   ============================================================================ */
+function attachWikiDragHandlers(container) {
+  container.querySelectorAll('img').forEach(img => {
+    img.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/wiki-image', img.src);
+    });
+    // Also add quick click-to-add button on double click
+    img.title = 'Drag onto slide (or double-click to add)';
+    img.addEventListener('dblclick', () => {
+      addImageElement(img.src);
+      playPop(640);
+    });
+  });
+}
+
+// Floating "Drop Text onto Slide" popover when selecting text in Wikipedia
+document.addEventListener('mouseup', () => {
+  if (gameState.phase !== 'BUILDING') return;
+  const sel = window.getSelection();
+  const text = sel ? sel.toString().trim() : '';
+  const pop = document.getElementById('wiki-selection-pop');
+  if (text.length > 1 && sel.rangeCount > 0) {
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    const wikiContainer = document.getElementById('build-wiki-body');
+    if (wikiContainer && wikiContainer.contains(sel.anchorNode)) {
+      pop.style.display = 'block';
+      pop.style.left = Math.max(16, Math.min(window.innerWidth - 220, rect.left)) + 'px';
+      pop.style.top = Math.max(68, rect.top - 42) + 'px';
+      pop.dataset.selectedText = text.slice(0, 350);
+      return;
+    }
+  }
+  pop.style.display = 'none';
+});
+
+function addSelectedWikiTextToSlide(e) {
+  e.preventDefault();
+  const pop = document.getElementById('wiki-selection-pop');
+  const txt = pop.dataset.selectedText;
+  if (txt) {
+    addTextBox(txt);
+    playPop(660);
+  }
+  pop.style.display = 'none';
+  window.getSelection().removeAllRanges();
+}
+
+function handleStageDragOver(e) {
+  e.preventDefault();
+  document.getElementById('editor-stage').classList.add('drag-over');
+}
+
+function handleStageDragLeave(e) {
+  document.getElementById('editor-stage').classList.remove('drag-over');
+}
+
+function handleStageDrop(e) {
+  e.preventDefault();
+  const stage = document.getElementById('editor-stage');
+  stage.classList.remove('drag-over');
+  const rect = stage.getBoundingClientRect();
+  const scaleX = 960 / rect.width;
+  const scaleY = 540 / rect.height;
+  const dropX = Math.max(20, Math.min(700, (e.clientX - rect.left) * scaleX - 80));
+  const dropY = Math.max(20, Math.min(400, (e.clientY - rect.top) * scaleY - 30));
+
+  const wikiImg = e.dataTransfer.getData('text/wiki-image');
+  const uriList = e.dataTransfer.getData('text/uri-list');
+  const plainText = e.dataTransfer.getData('text/plain');
+
+  if (wikiImg) {
+    addImageElement(wikiImg, dropX, dropY);
+    playPop(700);
+  } else if (uriList && /\.(png|jpe?g|gif|webp|svg)/i.test(uriList)) {
+    addImageElement(uriList, dropX, dropY);
+    playPop(700);
+  } else if (plainText && plainText.trim()) {
+    addTextBox(plainText.trim().slice(0, 350), dropX, dropY);
+    playPop(650);
+  }
+}
+
+/* ============================================================================
+   7. BUMP POWERPOINT STUDIO (Slides, Text, Shapes, Drawing, Stickers, GIFs)
+   ============================================================================ */
+let myDeck = createDefaultDeck('My Presentation');
+let myMusic = null; // { id, start, title }
+let activeSlideIdx = 0;
+let selectedElId = null;
+let isDrawingMode = false;
+
+function createDefaultDeck(ownerName) {
+  return {
+    slides: [
+      {
+        id: 's_' + Math.random().toString(36).slice(2, 8),
+        bgColor: '#FFFDF7',
+        bgPattern: 'bg-dots',
+        drawing: null, // dataURL of ink layer
+        elements: [
+          {
+            id: 'el_intro_1',
+            type: 'text',
+            text: 'Why This Wiki Page Is Wild',
+            x: 60, y: 50, w: 440, h: 140, rot: -1,
+            font: 'Fredoka', fontSize: 40, color: '#141416', fill: '#C6FF33'
+          }
+        ]
+      }
+    ]
+  };
+}
+
+function getCurrentSlide() {
+  if (!myDeck.slides[activeSlideIdx]) activeSlideIdx = 0;
+  return myDeck.slides[activeSlideIdx];
+}
+
+function autosaveDeckToHost() {
+  if (gameState.phase === 'BUILDING') {
+    if (isHost && gameState.players[myId]) {
+      gameState.players[myId].deck = myDeck;
+      gameState.players[myId].music = myMusic;
+    } else {
+      sendToHost({ type: 'SYNC_DECK', playerId: myId, deck: myDeck, music: myMusic });
+    }
+  }
+}
+
+function addNewSlide() {
+  playPop(580);
+  myDeck.slides.push({
+    id: 's_' + Math.random().toString(36).slice(2, 8),
+    bgColor: '#FFFFFF',
+    bgPattern: '',
+    drawing: null,
+    elements: [
+      {
+        id: 'el_' + Date.now(),
+        type: 'text',
+        text: 'Slide ' + (myDeck.slides.length + 1) + ' Title',
+        x: 60, y: 40, w: 460, h: 75, rot: 0,
+        font: 'Fredoka', fontSize: 34, color: '#141416', fill: 'transparent'
+      }
+    ]
+  });
+  activeSlideIdx = myDeck.slides.length - 1;
+  selectedElId = null;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function deleteSlide(idx, e) {
+  e.stopPropagation();
+  if (myDeck.slides.length <= 1) return;
+  playPop(340);
+  myDeck.slides.splice(idx, 1);
+  activeSlideIdx = Math.max(0, activeSlideIdx - 1);
+  selectedElId = null;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function updateSlideBgColor(val) {
+  getCurrentSlide().bgColor = val;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function updateSlideBgPattern(val) {
+  getCurrentSlide().bgPattern = val;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function addTextBox(initialText = 'Double-click to edit!', x = 140, y = 180) {
+  const slide = getCurrentSlide();
+  const id = 'el_' + Date.now() + Math.random().toString(36).slice(2, 5);
+  slide.elements.push({
+    id,
+    type: 'text',
+    text: initialText,
+    x, y,
+    w: initialText.length > 80 ? 440 : 320,
+    h: initialText.length > 80 ? 150 : 85,
+    rot: 0,
+    font: 'Fredoka',
+    fontSize: initialText.length > 80 ? 20 : 28,
+    color: '#141416',
+    fill: '#FFE600'
+  });
+  selectedElId = id;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function addShape(shapeType) {
+  playPop(540);
+  const slide = getCurrentSlide();
+  const id = 'el_' + Date.now();
+  const colors = ['#C6FF33', '#9D7BFF', '#FF5C5C', '#4DEEEA', '#FFE600', '#FF85E4'];
+  const fill = colors[Math.floor(Math.random() * colors.length)];
+  slide.elements.push({
+    id,
+    type: 'shape',
+    shape: shapeType,
+    x: 340, y: 170, w: 200, h: 160, rot: 0,
+    fill
+  });
+  selectedElId = id;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function addImageElement(src, x = 280, y = 130, isSticker = false, stickerText = '') {
+  const slide = getCurrentSlide();
+  const id = 'el_' + Date.now() + Math.random().toString(36).slice(2, 5);
+  slide.elements.push({
+    id,
+    type: isSticker ? 'sticker' : 'image',
+    src,
+    stickerText,
+    x, y,
+    w: isSticker ? 140 : 280,
+    h: isSticker ? 140 : 210,
+    rot: isSticker ? -5 : 0
+  });
+  selectedElId = id;
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function updateSelectedElStyle(prop, val) {
+  const slide = getCurrentSlide();
+  const el = slide.elements.find(x => x.id === selectedElId);
+  if (!el) return;
+  if (prop === 'fontSize') {
+    el.fontSize = Math.max(12, Math.min(96, (el.fontSize || 26) + val));
+  } else {
+    el[prop] = val;
+  }
+  renderSlideEditor();
+  autosaveDeckToHost();
+}
+
+function bringSelectedForward() {
+  const slide = getCurrentSlide();
+  const idx = slide.elements.findIndex(x => x.id === selectedElId);
+  if (idx >= 0 && idx < slide.elements.length - 1) {
+    const [item] = slide.elements.splice(idx, 1);
+    slide.elements.push(item);
+    renderSlideEditor();
+    autosaveDeckToHost();
+  }
+}
+
+function deleteSelectedElement() {
+  const slide = getCurrentSlide();
+  const idx = slide.elements.findIndex(x => x.id === selectedElId);
+  if (idx >= 0) {
+    playPop(320);
+    slide.elements.splice(idx, 1);
+    selectedElId = null;
+    renderSlideEditor();
+    autosaveDeckToHost();
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (gameState.phase !== 'BUILDING') return;
+  if (document.activeElement && (document.activeElement.isContentEditable || document.activeElement.tagName === 'INPUT')) return;
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElId) {
+    deleteSelectedElement();
+  }
+});
+
+function deselectAllElements(e) {
+  if (e.target.id === 'editor-stage' || e.target.id === 'editor-elements-layer') {
+    selectedElId = null;
+    renderSlideEditor();
+  }
+}
+
+function renderSlideEditor() {
+  const slide = getCurrentSlide();
+  const stage = document.getElementById('editor-stage');
+  stage.style.backgroundColor = slide.bgColor || '#ffffff';
+  stage.className = 'slide-canvas-box ' + (slide.bgPattern || '');
+  document.getElementById('slide-bg-color').value = slide.bgColor || '#ffffff';
+  document.getElementById('slide-bg-pattern').value = slide.bgPattern || '';
+
+  // Contextual toolbar visibility
+  const elControls = document.getElementById('el-controls');
+  const selObj = slide.elements.find(x => x.id === selectedElId);
+  elControls.style.display = selObj ? 'flex' : 'none';
+  if (selObj) {
+    if (selObj.font) document.getElementById('el-font').value = selObj.font;
+    if (selObj.color) document.getElementById('el-color').value = selObj.color;
+    if (selObj.fill && selObj.fill !== 'transparent') document.getElementById('el-fill').value = selObj.fill;
+  }
+
+  // Render Elements into 960x540 logical space scaled to stage
+  const layer = document.getElementById('editor-elements-layer');
+  renderElementsIntoLayer(layer, slide.elements, true);
+
+  // Render Drawing Canvas
+  const drawCanvas = document.getElementById('draw-layer');
+  const ctx = drawCanvas.getContext('2d');
+  ctx.clearRect(0, 0, 960, 540);
+  if (slide.drawing) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, 960, 540);
+    img.src = slide.drawing;
+  }
+
+  // Render Filmstrip
+  const strip = document.getElementById('slide-strip');
+  strip.innerHTML = '';
+  myDeck.slides.forEach((s, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'slide-thumb' + (i === activeSlideIdx ? ' active' : '');
+    thumb.style.backgroundColor = s.bgColor || '#fff';
+    thumb.innerHTML = `<span>#${i + 1}</span>`;
+    if (myDeck.slides.length > 1) {
+      const del = document.createElement('button');
+      del.textContent = '×';
+      del.style.cssText = 'position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:2px solid #141416; background:var(--coral); color:#fff; font-weight:800; cursor:pointer; line-height:1;';
+      del.onclick = (e) => deleteSlide(i, e);
+      thumb.appendChild(del);
+    }
+    thumb.onclick = () => {
+      activeSlideIdx = i;
+      selectedElId = null;
+      renderSlideEditor();
+    };
+    strip.appendChild(thumb);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'bump-btn sm';
+  addBtn.textContent = '+ Slide';
+  addBtn.onclick = addNewSlide;
+  strip.appendChild(addBtn);
+}
+
+function renderElementsIntoLayer(container, elements, interactive) {
+  container.innerHTML = '';
+  elements.forEach(el => {
+    const node = document.createElement('div');
+    node.className = 'slide-el' + (interactive && el.id === selectedElId ? ' selected' : '');
+    // Percentage-based positioning from 960x540 base
+    node.style.left = (el.x / 960 * 100) + '%';
+    node.style.top = (el.y / 540 * 100) + '%';
+    node.style.width = (el.w / 960 * 100) + '%';
+    node.style.height = (el.h / 540 * 100) + '%';
+    node.style.transform = `rotate(${el.rot || 0}deg)`;
+
+    if (el.type === 'text') {
+      const box = document.createElement('div');
+      box.className = 'el-text-content';
+      box.style.fontFamily = `'${el.font || 'Fredoka'}', sans-serif`;
+      box.style.fontSize = `clamp(11px, ${(el.fontSize || 28) / 9.6}vw, ${(el.fontSize || 28)}px)`;
+      box.style.color = el.color || '#141416';
+      box.style.fontWeight = '700';
+      if (el.fill && el.fill !== 'transparent') {
+        box.style.background = el.fill;
+        box.style.border = '2.5px solid #141416';
+        box.style.borderRadius = '14px';
+        box.style.boxShadow = '3px 3px 0 #141416';
+      }
+      box.textContent = el.text || '';
+
+      if (interactive) {
+        box.ondblclick = (e) => {
+          e.stopPropagation();
+          box.contentEditable = 'true';
+          box.focus();
+        };
+        box.onblur = () => {
+          box.contentEditable = 'false';
+          el.text = box.textContent;
+          autosaveDeckToHost();
+        };
+      }
+      node.appendChild(box);
+    } else if (el.type === 'shape') {
+      node.innerHTML = getShapeSVG(el.shape, el.fill || '#C6FF33');
+    } else if (el.type === 'image') {
+      const img = document.createElement('img');
+      img.src = el.src;
+      img.draggable = false;
+      img.style.cssText = 'width:100%; height:100%; object-fit:contain; border-radius:12px; pointer-events:none;';
+      node.appendChild(img);
+    } else if (el.type === 'sticker') {
+      if (el.src) {
+        const sDiv = document.createElement('div');
+        sDiv.className = 'sticker-diecut';
+        sDiv.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:4.2rem; pointer-events:none;';
+        sDiv.textContent = el.src;
+        node.appendChild(sDiv);
+      } else {
+        const badge = document.createElement('div');
+        badge.className = 'sticker-diecut';
+        badge.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#FFE600; border:3px solid #141416; border-radius:999px; font-family:Bangers,cursive; font-size:1.35rem; letter-spacing:1px; color:#141416; text-align:center; padding:4px; pointer-events:none;';
+        badge.textContent = el.stickerText;
+        node.appendChild(badge);
+      }
+    }
+
+    if (interactive) {
+      const resizer = document.createElement('div');
+      resizer.className = 'el-handle-resize';
+      const rotator = document.createElement('div');
+      rotator.className = 'el-handle-rotate';
+      node.appendChild(resizer);
+      node.appendChild(rotator);
+
+      attachElementTransformHandlers(node, el, resizer, rotator);
+    }
+
+    container.appendChild(node);
+  });
+}
+
+function getShapeSVG(shape, fill) {
+  const stroke = '#141416';
+  switch (shape) {
+    case 'circle':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><ellipse cx="50" cy="50" rx="46" ry="46" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
+    case 'pill':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><rect x="3" y="3" width="94" height="94" rx="45" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
+    case 'triangle':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,5 95,93 5,93" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
+    case 'arrow':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="5,32 58,32 58,12 95,50 58,88 58,68 5,68" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
+    case 'star':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,3 63,24 88,16 82,41 98,58 76,71 80,96 56,84 36,98 32,73 8,66 23,45 12,21 37,25" fill="${fill}" stroke="${stroke}" stroke-width="3.5" stroke-linejoin="round"/></svg>`;
+    case 'bubble':
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><path d="M12,8 H88 A8,8 0 0 1 96,16 V66 A8,8 0 0 1 88,74 H36 L16,92 V74 H12 A8,8 0 0 1 4,66 V16 A8,8 0 0 1 12,8 Z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/></svg>`;
+    default:
+      return `<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><rect x="3" y="3" width="94" height="94" rx="10" fill="${fill}" stroke="${stroke}" stroke-width="4"/></svg>`;
+  }
+}
+
+function attachElementTransformHandlers(node, el, resizer, rotator) {
+  node.onmousedown = (e) => {
+    if (e.target.isContentEditable) return;
+    e.stopPropagation();
+    selectedElId = el.id;
+    renderSlideEditor();
+
+    const stage = document.getElementById('editor-stage');
+    const rect = stage.getBoundingClientRect();
+    const scaleX = 960 / rect.width;
+    const scaleY = 540 / rect.height;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const origX = el.x, origY = el.y, origW = el.w, origH = el.h;
+
+    const mode = (e.target === resizer) ? 'resize' : (e.target === rotator) ? 'rotate' : 'move';
+
+    function onMove(ev) {
+      const dx = (ev.clientX - startX) * scaleX;
+      const dy = (ev.clientY - startY) * scaleY;
+      if (mode === 'move') {
+        el.x = origX + dx;
+        el.y = origY + dy;
+      } else if (mode === 'resize') {
+        el.w = Math.max(48, origW + dx);
+        el.h = Math.max(36, origH + dy);
+      } else if (mode === 'rotate') {
+        const cx = rect.left + ((el.x + el.w / 2) / 960) * rect.width;
+        const cy = rect.top + ((el.y + el.h / 2) / 540) * rect.height;
+        el.rot = Math.round(Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90);
+      }
+      // Fast live DOM update
+      const liveNode = document.querySelector('.slide-el.selected');
+      if (liveNode) {
+        liveNode.style.left = (el.x / 960 * 100) + '%';
+        liveNode.style.top = (el.y / 540 * 100) + '%';
+        liveNode.style.width = (el.w / 960 * 100) + '%';
+        liveNode.style.height = (el.h / 540 * 100) + '%';
+        liveNode.style.transform = `rotate(${el.rot || 0}deg)`;
+      }
+    }
+
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      autosaveDeckToHost();
+    }
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+}
+
+/* ---------- FREEHAND DRAWING TOOL ---------- */
+function toggleDrawMode() {
+  isDrawingMode = !isDrawingMode;
+  document.getElementById('btn-draw-mode').classList.toggle('active', isDrawingMode);
+  document.getElementById('draw-layer').classList.toggle('drawing-active', isDrawingMode);
+  document.getElementById('draw-controls').style.display = isDrawingMode ? 'flex' : 'none';
+  playPop(isDrawingMode ? 620 : 420);
+}
+
+function initDrawCanvas() {
+  const canvas = document.getElementById('draw-layer');
+  const ctx = canvas.getContext('2d');
+  let painting = false;
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) * (960 / r.width),
+      y: (e.clientY - r.top) * (540 / r.height)
+    };
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (!isDrawingMode) return;
+    painting = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!painting || !isDrawingMode) return;
+    const p = getPos(e);
+    ctx.lineWidth = Number(document.getElementById('draw-size').value) || 6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = document.getElementById('draw-color').value || '#FF5C5C';
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (painting) {
+      painting = false;
+      getCurrentSlide().drawing = canvas.toDataURL('image/png');
+      autosaveDeckToHost();
+    }
+  });
+}
+
+function clearSlideDrawing() {
+  const canvas = document.getElementById('draw-layer');
+  canvas.getContext('2d').clearRect(0, 0, 960, 540);
+  getCurrentSlide().drawing = null;
+  playPop(340);
+  autosaveDeckToHost();
+}
+
+/* ---------- STICKERS, GIFS & YOUTUBE MUSIC MODALS ---------- */
+const BUMP_EMOJI_STICKERS = ['🔥','💀','😭','🧠','🚨','💯','🤡','🏆','👀','⚡','💥','🛸','🦖','🍕','👑','🚀','🎉','💩','🐐','🫡','📈','📉','❓','❗'];
+const BUMP_BADGE_STICKERS = ['FACT CHECK ✅', 'NO CAP 🧢', 'TRUST ME BRO', '100% REAL', 'BREAKING NEWS', 'SOURCE: WIKI', 'WAIT WHAT?!', 'BIG BRAIN 🧠'];
+
+const CURATED_GIFS = [
+  { label: 'Mind Blown', url: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif' },
+  { label: 'Nyan Cat', url: 'https://upload.wikimedia.org/wikipedia/en/e/ed/Nyan_cat_250px_frame.PNG' },
+  { label: 'Party Parrot', url: 'https://upload.wikimedia.org/wikipedia/commons/6/6c/Sirocco_the_kakapo_head_bob.gif' },
+  { label: 'Newton Cradle', url: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Newtons_cradle_animation_book_2.gif' },
+  { label: 'DNA Spin', url: 'https://upload.wikimedia.org/wikipedia/commons/8/81/ADN_animation.gif' },
+  { label: 'Loading Wheel', url: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif' }
+];
+
+function openModal(id) {
+  playPop(580);
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function initStickerAndGifLibraries() {
+  const sGrid = document.getElementById('sticker-grid');
+  BUMP_EMOJI_STICKERS.forEach(emo => {
+    const item = document.createElement('div');
+    item.className = 'sticker-item';
+    item.style.fontSize = '2.2rem';
+    item.textContent = emo;
+    item.onclick = () => {
+      addImageElement(emo, 360, 180, true, '');
+      closeModal('modal-stickers');
+      playPop(680);
+    };
+    sGrid.appendChild(item);
+  });
+
+  BUMP_BADGE_STICKERS.forEach(txt => {
+    const item = document.createElement('div');
+    item.className = 'sticker-item';
+    item.style.cssText = 'font-family:Bangers,cursive; font-size:1rem; background:var(--yellow); display:flex; align-items:center; justify-content:center;';
+    item.textContent = txt;
+    item.onclick = () => {
+      addImageElement('', 340, 200, true, txt);
+      closeModal('modal-stickers');
+      playPop(680);
+    };
+    sGrid.appendChild(item);
+  });
+
+  renderGifGrid(CURATED_GIFS);
+}
+
+function renderGifGrid(items) {
+  const gGrid = document.getElementById('gif-results-grid');
+  gGrid.innerHTML = '';
+  items.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'sticker-item';
+    card.innerHTML = `<img src="${g.url}" crossorigin="anonymous" style="width:100%; height:90px; object-fit:contain; border-radius:8px;"/><div style="font-size:0.75rem; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(g.label)}</div>`;
+    card.onclick = () => {
+      addImageElement(g.url, 320, 150, false);
+      closeModal('modal-gifs');
+      playPop(700);
+    };
+    gGrid.appendChild(card);
+  });
+}
+
+async function searchOrAddGif() {
+  const q = document.getElementById('gif-search-input').value.trim();
+  if (!q) return;
+  if (/^https?:\/\//i.test(q)) {
+    addImageElement(q, 320, 150, false);
+    closeModal('modal-gifs');
+    return;
+  }
+  const gGrid = document.getElementById('gif-results-grid');
+  gGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:24px;">🔎 Searching Wikimedia Commons GIFs...</div>';
+  try {
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=filetype:gif+${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const pages = Object.values(data?.query?.pages || {});
+    if (pages.length === 0) {
+      renderGifGrid(CURATED_GIFS);
+      return;
+    }
+    const results = pages.map(p => ({
+      label: p.title.replace('File:', '').replace('.gif', ''),
+      url: p.imageinfo?.[0]?.url
+    })).filter(x => x.url);
+    renderGifGrid(results);
+  } catch (e) {
+    renderGifGrid(CURATED_GIFS);
+  }
+}
+
+function initYtPresets() {
+  const list = document.getElementById('yt-presets-list');
+  YT_PRESETS.forEach(tr => {
+    const btn = document.createElement('button');
+    btn.className = 'bump-btn sm white';
+    btn.style.justifyContent = 'flex-start';
+    btn.textContent = tr.title;
+    btn.onclick = () => {
+      myMusic = { id: tr.id, start: tr.start, title: tr.title };
+      document.getElementById('yt-selected-title').textContent = tr.title;
+      playYoutubeMusic(tr.id, tr.start, tr.title);
+      autosaveDeckToHost();
+    };
+    list.appendChild(btn);
+  });
+}
+
+function applyCustomYoutube() {
+  const raw = document.getElementById('yt-url-input').value;
+  const id = parseYoutubeId(raw);
+  const start = Number(document.getElementById('yt-start-sec').value) || 0;
+  if (!id) {
+    alert('Could not find a valid YouTube Video ID in that link!');
+    return;
+  }
+  myMusic = { id, start, title: 'Custom YT (' + id + ')' };
+  document.getElementById('yt-selected-title').textContent = myMusic.title;
+  playYoutubeMusic(id, start, myMusic.title);
+  autosaveDeckToHost();
+}
+
+function clearYoutubeTrack() {
+  myMusic = null;
+  document.getElementById('yt-selected-title').textContent = 'None';
+  stopYoutubeMusic();
+  autosaveDeckToHost();
+}
+
+/* ============================================================================
+   8. LIVE PRESENTATION STAGE (Presenter Controls Slides & Laser for All)
+   ============================================================================ */
+function renderPresentationStage(state) {
+  const presId = state.presentOrder[state.currentPresIdx];
+  const presenter = state.players[presId];
+  if (!presenter) return;
+
+  const isMePresenting = (presId === myId);
+  const deck = presenter.deck || createDefaultDeck(presenter.name);
+  const slideIdx = Math.min(state.currentSlideIdx || 0, deck.slides.length - 1);
+  const slide = deck.slides[slideIdx];
+
+  document.getElementById('pres-avatar').textContent = presenter.avatar;
+  document.getElementById('pres-avatar').style.background = presenter.color;
+  document.getElementById('pres-order-num').textContent = `${state.currentPresIdx + 1}/${state.presentOrder.length}`;
+  document.getElementById('pres-name').textContent = presenter.name;
+  document.getElementById('pres-topic').textContent = presenter.article?.title || 'Mystery Wiki';
+  document.getElementById('pres-slide-indicator').textContent = `${slideIdx + 1} / ${deck.slides.length}`;
+
+  // Play presenter's chosen YouTube background music for everyone when presenter switches!
+  if (lastRenderedPresIdx !== state.currentPresIdx || lastRenderedPhase !== 'PRESENTING') {
+    lastRenderedPresIdx = state.currentPresIdx;
+    if (presenter.music && presenter.music.id) {
+      playYoutubeMusic(presenter.music.id, presenter.music.start, presenter.music.title);
+    } else {
+      stopYoutubeMusic();
+    }
+  }
+
+  // Render slide into Present Stage
+  const stage = document.getElementById('present-stage');
+  stage.style.backgroundColor = slide.bgColor || '#ffffff';
+  stage.className = 'slide-canvas-box ' + (slide.bgPattern || '');
+  renderElementsIntoLayer(document.getElementById('present-elements-layer'), slide.elements, false);
+
+  const pCanvas = document.getElementById('present-draw-canvas');
+  const pCtx = pCanvas.getContext('2d');
+  pCtx.clearRect(0, 0, 960, 540);
+  if (slide.drawing) {
+    const img = new Image();
+    img.onload = () => pCtx.drawImage(img, 0, 0, 960, 540);
+    img.src = slide.drawing;
+  }
+
+  // Toggle Presenter Controls vs Audience Reaction Pad
+  document.getElementById('presenter-controls-bar').style.display = isMePresenting ? 'flex' : 'none';
+  document.getElementById('audience-reactions-bar').style.display = isMePresenting ? 'none' : 'flex';
+  document.getElementById('host-force-end-pitch').style.display = (!isMePresenting && isHost) ? 'inline-flex' : 'none';
+}
+
+function presenterChangeSlide(delta) {
+  const presId = gameState.presentOrder[gameState.currentPresIdx];
+  if (presId !== myId) return;
+  const deck = gameState.players[myId]?.deck || myDeck;
+  const next = Math.max(0, Math.min(deck.slides.length - 1, gameState.currentSlideIdx + delta));
+  if (next !== gameState.currentSlideIdx) {
+    playPop(560);
+    sendToHost({ type: 'SLIDE_CHANGE', slideIdx: next });
+  }
+}
+
+function presenterFinishPitch() {
+  playFanfare();
+  sendToHost({ type: 'FINISH_PITCH' });
+}
+
+let lastLaserSent = 0;
+function handlePresenterLaserMove(e) {
+  const presId = gameState.presentOrder[gameState.currentPresIdx];
+  if (presId !== myId) return;
+  const now = Date.now();
+  if (now - lastLaserSent < 45) return; // Throttle to ~22fps
+  lastLaserSent = now;
+  const r = e.currentTarget.getBoundingClientRect();
+  const nx = (e.clientX - r.left) / r.width;
+  const ny = (e.clientY - r.top) / r.height;
+  broadcastEphemeral({ type: 'LASER', nx, ny, active: true });
+}
+
+function hidePresenterLaser() {
+  const presId = gameState.presentOrder[gameState.currentPresIdx];
+  if (presId === myId) broadcastEphemeral({ type: 'LASER', active: false });
+}
+
+function sendReaction(emoji) {
+  playPop(660);
+  broadcastEphemeral({ type: 'REACTION', emoji });
+}
+
+function handleEphemeral(msg) {
+  if (msg.type === 'LASER') {
+    const dot = document.getElementById('present-laser-dot');
+    if (!msg.active) {
+      dot.style.display = 'none';
+    } else {
+      dot.style.display = 'block';
+      dot.style.left = (msg.nx * 100) + '%';
+      dot.style.top = (msg.ny * 100) + '%';
+    }
+  } else if (msg.type === 'REACTION') {
+    const el = document.createElement('div');
+    el.className = 'floating-reaction';
+    el.textContent = msg.emoji;
+    el.style.left = (15 + Math.random() * 70) + 'vw';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2250);
+  }
+}
+
+/* ============================================================================
+   9. VOTING (1-10) & EXCITING TV-SHOW REVEAL & PODIUM
+   ============================================================================ */
+const VOTE_FLAVORS = {
+  1: '1 — Did you even read the Wikipedia page?! 💀',
+  2: '2 — Bold strategy, zero facts.',
+  3: '3 — Needs more stickers.',
+  4: '4 — A valiant Wikipedia skim.',
+  5: '5 — Solidly average encyclopedia energy.',
+  6: '6 — Surprisingly informative!',
+  7: '7 — Peak party presentation!',
+  8: '8 — TED Talk material right here 🔥',
+  9: '9 — Give this person a PhD! 🧠',
+  10: '10 — ABSOLUTE CINEMA! NOBEL PRIZE! 🏆'
+};
+
+function initVoteButtons() {
+  const grid = document.getElementById('vote-buttons-grid');
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'vote-num-btn';
+    btn.textContent = i;
+    btn.dataset.score = i;
+    btn.onclick = () => submitVote(i);
+    grid.appendChild(btn);
+  }
+}
+
+function renderVotingScreen(state) {
+  const presId = state.presentOrder[state.currentPresIdx];
+  const presenter = state.players[presId];
+  if (!presenter) return;
+
+  document.getElementById('vote-presenter-name').textContent = presenter.name;
+  document.getElementById('vote-topic-sub').textContent = '"' + (presenter.article?.title || '') + '"';
+
+  const isHotSeat = (presId === myId);
+  document.getElementById('voter-pad-container').style.display = isHotSeat ? 'none' : 'block';
+  document.getElementById('presenter-voting-wait').style.display = isHotSeat ? 'block' : 'none';
+
+  const voteMap = state.votes[presId] || {};
+  const myVote = voteMap[myId];
+  document.querySelectorAll('.vote-num-btn').forEach(b => {
+    b.classList.toggle('picked', Number(b.dataset.score) === myVote);
+  });
+  document.getElementById('vote-flavor-text').textContent = myVote ? VOTE_FLAVORS[myVote] : 'Tap a score from 1 to 10!';
+
+  const expected = Math.max(1, Object.keys(state.players).filter(id => id !== presId).length);
+  const count = Object.keys(voteMap).length;
+  document.getElementById('votes-progress-count').textContent = `${count} / ${expected}`;
+  document.getElementById('host-reveal-now-btn').style.display = isHost ? 'inline-flex' : 'none';
+}
+
+function submitVote(score) {
+  playPop(400 + score * 45);
+  sendToHost({ type: 'CAST_VOTE', voterId: myId, score });
+}
+
+function renderTVRevealScreen(state) {
+  const presId = state.presentOrder[state.currentPresIdx];
+  const presenter = state.players[presId];
+  if (!presenter) return;
+
+  const revealKey = `${state.currentPresIdx}-${presId}`;
+  document.getElementById('reveal-presenter-title').textContent = `${presenter.avatar} ${presenter.name}'s Scores!`;
+  document.getElementById('reveal-article-title').textContent = `"${presenter.article?.title || ''}"`;
+  document.getElementById('host-after-reveal-btn').style.display = isHost ? 'inline-flex' : 'none';
+  document.getElementById('host-after-reveal-btn').textContent =
+    (state.currentPresIdx + 1 < state.presentOrder.length) ? '➡️ Next Presenter' : '🏆 Show Final Podium!';
+
+  if (lastRevealedKey === revealKey) return;
+  lastRevealedKey = revealKey;
+
+  const voteMap = state.votes[presId] || {};
+  const entries = Object.entries(voteMap).map(([vid, sc]) => {
+    const vp = state.players[vid] || { name: 'Judge', avatar: '🧐' };
+    return { name: vp.name, avatar: vp.avatar, score: sc };
+  });
+
+  const row = document.getElementById('reveal-cards-row');
+  row.innerHTML = '';
+  const odometer = document.getElementById('reveal-odometer');
+  const avgBadge = document.getElementById('reveal-avg-badge');
+  odometer.textContent = '0';
+  avgBadge.textContent = 'Calculating...';
+
+  // Create face-down cards
+  const cardEls = entries.map(ent => {
+    const card = document.createElement('div');
+    card.className = 'voter-reveal-card';
+    card.innerHTML = `
+      <div style="font-size:2rem;">${ent.avatar}</div>
+      <div style="font-weight:700; font-size:0.85rem; margin:4px 0;">${escapeHtml(ent.name)}</div>
+      <div class="card-score-val" style="font-family:'Bangers',cursive; font-size:2.4rem;">?</div>
+    `;
+    row.appendChild(card);
+    return { card, score: ent.score };
+  });
+
+  // Dramatic Drumroll + Sequential TV Card Flips!
+  playDrumroll(1200);
+  let runningTotal = 0;
+
+  cardEls.forEach((item, idx) => {
+    setTimeout(() => {
+      item.card.classList.add('flipped');
+      if (item.score >= 9) item.card.classList.add('high-score');
+      item.card.querySelector('.card-score-val').textContent = item.score + ' / 10';
+      playVoteFlip(item.score);
+
+      runningTotal += item.score;
+      odometer.textContent = runningTotal;
+
+      if (idx === cardEls.length - 1) {
+        const avg = entries.length ? (runningTotal / entries.length).toFixed(1) : '0.0';
+        avgBadge.textContent = `Average Score: ${avg} / 10`;
+        if (Number(avg) >= 7.5 && typeof confetti === 'function') {
+          playFanfare();
+          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+        }
+      }
+    }, 1100 + idx * 750);
+  });
+}
+
+function renderPodiumScreen(state) {
+  if (typeof confetti === 'function') {
+    confetti({ particleCount: 130, spread: 90, origin: { y: 0.55 } });
+  }
+  playFanfare();
+
+  const sorted = Object.values(state.players).sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+  const podiumEl = document.getElementById('podium-stage');
+  podiumEl.innerHTML = '';
+
+  // Display order: 2nd (left), 1st (center), 3rd (right)
+  const podiumOrder = [
+    { player: sorted[1], rank: 2, medal: '🥈 2ND' },
+    { player: sorted[0], rank: 1, medal: '👑 1ST' },
+    { player: sorted[2], rank: 3, medal: '🥉 3RD' }
+  ].filter(x => x.player);
+
+  podiumOrder.forEach(item => {
+    const col = document.createElement('div');
+    col.className = `podium-col rank-${item.rank}`;
+    col.innerHTML = `
+      <div style="font-size:3.2rem; margin-bottom:6px;">${item.player.avatar}</div>
+      <div style="font-weight:700; font-size:1.1rem; margin-bottom:8px;">${escapeHtml(item.player.name)}</div>
+      <div class="podium-block">
+        <span class="badge-tag">${item.medal}</span>
+        <div style="font-size:2.1rem; margin-top:6px;">${item.player.totalScore || 0} pts</div>
+      </div>
+    `;
+    podiumEl.appendChild(col);
+  });
+
+  // Full leaderboard + Download any player's slides as PNGs
+  const list = document.getElementById('podium-full-list');
+  list.innerHTML = '';
+  sorted.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.className = 'player-bubble';
+    row.style.justifyContent = 'space-between';
+    row.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px;">
+        <strong style="font-size:1.2rem;">#${idx + 1}</strong>
+        <div class="player-avatar-circle" style="background:${p.color}">${p.avatar}</div>
+        <div>
+          <strong>${escapeHtml(p.name)}</strong> — <span style="color:#555;">"${escapeHtml(p.article?.title || 'Wiki Deck')}"</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="bump-pill" style="background:var(--lime);">${p.totalScore || 0} pts</span>
+        <button class="bump-btn sm cyan" onclick="exportDeckObjectAsPNGs('${p.id}')">📸 Download PNGs</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  document.getElementById('host-play-again-btn').style.display = isHost ? 'inline-flex' : 'none';
+}
+
+/* ============================================================================
+   10. HIGH-DPI NATIVE CANVAS PNG EXPORTER (Downloads PPT Slides as PNGs!)
+   ============================================================================ */
+async function exportCurrentDeckAsPNGs() {
+  await downloadDeckPNGs(myDeck, myProfile.name || 'WikiPitch');
+}
+
+async function exportPresentedDeckAsPNGs() {
+  const presId = gameState.presentOrder[gameState.currentPresIdx];
+  const presenter = gameState.players[presId];
+  if (presenter && presenter.deck) {
+    await downloadDeckPNGs(presenter.deck, presenter.name);
+  }
+}
+
+async function exportDeckObjectAsPNGs(playerId) {
+  const p = gameState.players[playerId];
+  if (p && p.deck) {
+    await downloadDeckPNGs(p.deck, p.name);
+  }
+}
+
+async function downloadDeckPNGs(deck, authorName) {
+  playPop(700);
+  const cleanName = authorName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'Presentation';
+  const blobs = [];
+
+  for (let i = 0; i < deck.slides.length; i++) {
+    const canvas = await renderSlideToOffscreenCanvas(deck.slides[i], 1280, 720);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    blobs.push({ name: `${cleanName}-slide-${i + 1}.png`, blob });
+  }
+
+  // If 1 slide, download directly as .png; if multiple slides, package all PNGs into a clean ZIP (plus first PNG if JSZip unavailable)
+  if (blobs.length === 1 || typeof JSZip === 'undefined') {
+    blobs.forEach(b => triggerBlobDownload(b.blob, b.name));
+  } else {
+    const zip = new JSZip();
+    blobs.forEach(b => zip.file(b.name, b.blob));
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    triggerBlobDownload(zipBlob, `${cleanName}-slides-PNGs.zip`);
+  }
+}
+
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+async function renderSlideToOffscreenCanvas(slide, W, H) {
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const sx = W / 960;
+  const sy = H / 540;
+
+  // 1. Background fill & pattern
+  if (slide.bgPattern === 'bg-sunset') {
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#FF9A9E');
+    grad.addColorStop(0.5, '#FECFEF');
+    grad.addColorStop(1, '#F6D365');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  } else if (slide.bgPattern === 'bg-cyber') {
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#141416');
+    grad.addColorStop(1, '#2d1b69');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    ctx.fillStyle = slide.bgColor || '#FFFFFF';
+    ctx.fillRect(0, 0, W, H);
+    if (slide.bgPattern === 'bg-dots') {
+      ctx.fillStyle = 'rgba(20,20,22,0.18)';
+      for (let x = 14; x < W; x += 26) {
+        for (let y = 14; y < H; y += 26) {
+          ctx.beginPath();
+          ctx.arc(x, y, 2.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    } else if (slide.bgPattern === 'bg-grid') {
+      ctx.strokeStyle = 'rgba(20,20,22,0.12)';
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    }
+  }
+
+  // 2. Elements (Shapes, Images, Stickers, Text)
+  for (const el of slide.elements) {
+    const x = el.x * sx, y = el.y * sy, w = el.w * sx, h = el.h * sy;
+    ctx.save();
+    ctx.translate(x + w / 2, y + h / 2);
+    ctx.rotate((el.rot || 0) * Math.PI / 180);
+    ctx.translate(-w / 2, -h / 2);
+
+    if (el.type === 'shape') {
+      drawShapeOnCanvas(ctx, el.shape, w, h, el.fill || '#C6FF33');
+    } else if (el.type === 'image') {
+      await drawImageSafeOnCanvas(ctx, el.src, w, h);
+    } else if (el.type === 'sticker') {
+      if (el.src) {
+        ctx.font = `${Math.round(Math.min(w, h) * 0.78)}px "Fredoka", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(el.src, w / 2, h / 2);
+      } else {
+        ctx.fillStyle = '#FFE600';
+        ctx.strokeStyle = '#141416';
+        ctx.lineWidth = 4;
+        roundRectPath(ctx, 4, 4, w - 8, h - 8, h / 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#141416';
+        ctx.font = `bold ${Math.round(h * 0.34)}px "Bangers", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(el.stickerText || '', w / 2, h / 2);
+      }
+    } else if (el.type === 'text') {
+      if (el.fill && el.fill !== 'transparent') {
+        ctx.fillStyle = '#141416';
+        roundRectPath(ctx, 4, 4, w, h, 18);
+        ctx.fill();
+        ctx.fillStyle = el.fill;
+        ctx.strokeStyle = '#141416';
+        ctx.lineWidth = 3.5;
+        roundRectPath(ctx, 0, 0, w, h, 18);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.fillStyle = el.color || '#141416';
+      const fSize = Math.round((el.fontSize || 28) * sx);
+      ctx.font = `700 ${fSize}px "${el.font || 'Fredoka'}", sans-serif`;
+      ctx.textBaseline = 'top';
+      wrapTextCanvas(ctx, el.text || '', 14, 12, w - 28, fSize * 1.24);
+    }
+    ctx.restore();
+  }
+
+  // 3. Freehand Ink Drawing Layer
+  if (slide.drawing) {
+    await drawImageSafeOnCanvas(ctx, slide.drawing, W, H);
+  }
+
+  return canvas;
+}
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawShapeOnCanvas(ctx, shape, w, h, fill) {
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = '#141416';
+  ctx.lineWidth = 4.5;
+  ctx.beginPath();
+  if (shape === 'circle') {
+    ctx.ellipse(w / 2, h / 2, w / 2 - 4, h / 2 - 4, 0, 0, Math.PI * 2);
+  } else if (shape === 'pill') {
+    roundRectPath(ctx, 4, 4, w - 8, h - 8, Math.min(w, h) / 2);
+  } else if (shape === 'triangle') {
+    ctx.moveTo(w / 2, 6);
+    ctx.lineTo(w - 6, h - 6);
+    ctx.lineTo(6, h - 6);
+    ctx.closePath();
+  } else if (shape === 'arrow') {
+    ctx.moveTo(6, h * 0.32);
+    ctx.lineTo(w * 0.58, h * 0.32);
+    ctx.lineTo(w * 0.58, h * 0.12);
+    ctx.lineTo(w - 6, h * 0.5);
+    ctx.lineTo(w * 0.58, h * 0.88);
+    ctx.lineTo(w * 0.58, h * 0.68);
+    ctx.lineTo(6, h * 0.68);
+    ctx.closePath();
+  } else {
+    roundRectPath(ctx, 4, 4, w - 8, h - 8, 14);
+  }
+  ctx.fill();
+  ctx.stroke();
+}
+
+function drawImageSafeOnCanvas(ctx, src, w, h) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        ctx.drawImage(img, 0, 0, w, h);
+      } catch (e) {}
+      resolve();
+    };
+    img.onerror = () => {
+      // Fallback framed card if an external GIF lacks CORS headers
+      ctx.fillStyle = '#F1EFE7';
+      ctx.strokeStyle = '#141416';
+      ctx.lineWidth = 3;
+      roundRectPath(ctx, 4, 4, w - 8, h - 8, 14);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#141416';
+      ctx.font = 'bold 20px "Fredoka", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🖼️ Embedded Media', w / 2, h / 2);
+      resolve();
+    };
+    img.src = src;
+  });
+}
+
+function wrapTextCanvas(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(/\s+/);
+  let line = '';
+  let curY = y;
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+      ctx.fillText(line.trim(), x, curY);
+      line = words[n] + ' ';
+      curY += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line.trim(), x, curY);
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
